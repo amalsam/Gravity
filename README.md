@@ -13,8 +13,8 @@ The simulation consists of particles moving within a defined space, interacting 
 
 To run the simulation, make sure you have Python,Numba and Pygame installed on your system. You can install Pygame using the following command:
 
-'''pip install pygame '''
-'''pip install numba'''
+```pip install pygame ```
+```pip install numba```
 
 
 ## Usage
