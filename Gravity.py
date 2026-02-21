@@ -9,6 +9,7 @@ WIDTH = 1500
 HEIGHT = 800
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
+
 G = 0.1
 M = 10e7
 BLACK = (0, 0, 0)

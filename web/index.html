@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gravity Physics Simulation</title>
+    <meta name="description" content="A dynamic orbital gravity simulator using HTML5 Canvas.">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <canvas id="simCanvas"></canvas>
+    <button id="toggleUiBtn" class="toggle-ui-btn">👁️</button>
+    
+    <div id="uiPanel">
+        <h2>Orbital Nexus Simulation</h2>
+        <div class="stats">
+            <p>Particles: <span id="particleCount">0</span></p>
+            <p>FPS: <span id="fpsCount">0</span></p>
+        </div>
+        <div class="controls">
+            <p class="hide-mobile"><strong>Keys 1-3 or Ctrl+Click</strong> to spawn</p>
+            <div class="action-buttons">
+                <button id="btnSingle" class="active">Single</button>
+                <button id="btnLine1">H-Line</button>
+                <button id="btnCircle">Circle</button>
+                <button id="btnLine2">V-Line</button>
+            </div>
+        </div>
+        
+        <div class="nav-links">
+            <a href="blackhole3d.html">3D Black Hole</a>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

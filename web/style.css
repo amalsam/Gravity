@@ -1,0 +1,204 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    /* Prevent text selection on mobile when tapping rapidly */
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+body,
+html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: rgb(20, 20, 20);
+    font-family: 'Inter', sans-serif;
+    color: white;
+    touch-action: none;
+    /* Prevent browser handling of gestures like pinch zoom or scroll */
+}
+
+canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+}
+
+#uiPanel {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    padding: 24px;
+    border-radius: 12px;
+
+    /* Glassmorphism */
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+    pointer-events: none;
+    /* Let clicks pass through to canvas except for buttons */
+    min-width: 250px;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+#uiPanel:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+#uiPanel h2 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(90deg, #fff, #9ca3af);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.stats {
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+    font-family: monospace;
+    color: #e5e7eb;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stats p {
+    margin: 4px 0;
+    display: flex;
+    justify-content: space-between;
+}
+
+.controls {
+    font-size: 0.85rem;
+    color: #9ca3af;
+    line-height: 1.8;
+}
+
+.hide-mobile {
+    margin-bottom: 8px;
+}
+
+.action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    pointer-events: auto;
+    /* Make buttons clickable */
+}
+
+.action-buttons button {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    outline: none;
+}
+
+.action-buttons button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.action-buttons button.active {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    font-weight: 600;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-ui-btn {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Mobile responsivness */
+@media (max-width: 600px) {
+    #uiPanel {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        min-width: 0;
+        padding: 16px;
+    }
+
+    #uiPanel h2 {
+        font-size: 1.1rem;
+        margin-bottom: 12px;
+    }
+
+    .hide-mobile {
+        display: none;
+    }
+
+    .action-buttons {
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+    }
+
+    .action-buttons button {
+        padding: 6px 2px;
+        font-size: 0.7rem;
+    }
+
+    .toggle-ui-btn {
+        display: block;
+    }
+
+    #uiPanel.hidden {
+        display: none;
+    }
+}
+
+/* Navigation Links */
+.nav-links {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: auto;
+    /* Buttons need pointer events */
+}
+
+.nav-links a {
+    color: #9ca3af;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s, background 0.2s;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+.nav-links a:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.15);
+}

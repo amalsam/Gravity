@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D True Interstellar Black Hole</title>
+    <link rel="stylesheet" href="blackhole.css">
+    <style>
+        #hud h2 { color: #aaaaff; }
+        #mouseHint { color: #aaaaff; }
+    </style>
+</head>
+<body>
+    <button id="toggleHudBtn" class="toggle-hud-btn">👁️</button>
+    <div id="hud">
+        <h2>3D GRAVITY ENGINE (WEBGL)</h2>
+        <div class="stat"><span class="label">BH MASS:</span> <span id="massVal">5.0e+06</span></div>
+        <div class="stat"><span class="label">ACTIVE PARTICLES:</span> <span id="particlesVal">0</span></div>
+        <div class="stat"><span class="label">MATTER CONSUMED:</span> <span id="consumedVal">0</span></div>
+        <div class="stat"><span class="label">FPS:</span> <span id="fpsVal">0</span></div>
+        <div id="mouseHint">LEFT CLICK TO ORBIT | SCROLL TO ZOOM</div>
+        
+        <div class="nav-links">
+            <a href="index.html">← Gravity Simulator</a>
+        </div>
+    </div>
+
+    <!-- Load Three.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <!-- App Logic -->
+    <script src="blackhole3d.js"></script>
+</body>
+</html>
