@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Particle Swarm Sandbox</title>
+    <meta name="description" content="A dynamic N-body particle swarm interaction simulator.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../shared/framework.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Standardized Experiment Framework Wrapper -->
+    <div class="exp-top-bar">
+        <a href="../../index.html" class="back-btn">← Gallery</a>
+        <h1>Swarm Sandbox</h1>
+        <div class="ad-slot-header">AdSense (728x90)</div>
+    </div>
+
+    <canvas id="simCanvas"></canvas>
+    <button id="toggleUiBtn" class="toggle-ui-btn">👁️</button>
+    
+    <div id="uiPanel">
+        <h2>Swarm N-Body Engine</h2>
+        <div class="stats">
+            <p>Particles: <span id="particleCount">0</span></p>
+            <p>FPS: <span id="fpsCount">0</span></p>
+        </div>
+        <div class="controls">
+            <p class="hide-mobile" id="controlHint">Select shape to spawn, then <strong>Click/Tap</strong> canvas</p>
+            <div class="action-buttons">
+                <button id="btnSingle" class="active">Single</button>
+                <button id="btnCircle">Circle</button>
+            </div>
+            
+            <div class="slider-group">
+                <label for="sizeSlider">Particle Size & Mass (<span id="sizeVal">10</span>)</label>
+                <input type="range" id="sizeSlider" min="2" max="30" step="1" value="10">
+            </div>
+
+            <div class="slider-group">
+                <label for="speedSlider">Simulation Speed (<span id="speedVal">1.0</span>x)</label>
+                <input type="range" id="speedSlider" min="0.1" max="5.0" step="0.1" value="1.0">
+            </div>
+
+            <button id="btnClear" style="width: 100%; margin-top: 15px; padding: 8px; background: rgba(255, 50, 50, 0.2); border: 1px solid rgba(255, 50, 50, 0.4); border-radius: 6px; cursor: pointer; color: white; pointer-events: auto;">Clear All Particles</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
