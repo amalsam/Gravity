@@ -27,7 +27,8 @@ canvas {
 
 #uiPanel {
     position: absolute;
-    top: 20px;
+    top: 80px;
+    /* Shifted down for the framework Top Bar */
     left: 20px;
     padding: 24px;
     border-radius: 12px;
@@ -124,7 +125,8 @@ canvas {
 .toggle-ui-btn {
     display: none;
     position: absolute;
-    top: 10px;
+    top: 70px;
+    /* Shifted down for top bar */
     right: 10px;
     z-index: 100;
     background: rgba(255, 255, 255, 0.1);
@@ -142,7 +144,8 @@ canvas {
 /* Mobile responsivness */
 @media (max-width: 600px) {
     #uiPanel {
-        top: 10px;
+        top: 130px;
+        /* Shifted more on mobile due to stacked top bar */
         left: 10px;
         right: 10px;
         min-width: 0;
@@ -168,37 +171,21 @@ canvas {
     }
 
     .toggle-ui-btn {
-        display: block;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        top: auto;
+        bottom: 30px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        font-size: 1.5rem;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.15);
     }
 
     #uiPanel.hidden {
         display: none;
     }
-}
-
-/* Navigation Links */
-.nav-links {
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    pointer-events: auto;
-    /* Buttons need pointer events */
-}
-
-.nav-links a {
-    color: #9ca3af;
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: color 0.2s, background 0.2s;
-    background: rgba(255, 255, 255, 0.05);
-    padding: 8px 12px;
-    border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    text-align: center;
-}
-
-.nav-links a:hover {
-    color: white;
-    background: rgba(255, 255, 255, 0.15);
 }

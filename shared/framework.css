@@ -1,0 +1,86 @@
+/* Shared Framework UI for all experiments */
+.exp-top-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 1000;
+    border-bottom: 1px solid #333;
+    font-family: 'Inter', sans-serif;
+    color: white;
+    box-sizing: border-box;
+}
+
+.exp-top-bar .back-btn {
+    color: #9ca3af;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.exp-top-bar .back-btn:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.exp-top-bar h1 {
+    font-size: 16px;
+    margin: 0;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 600;
+    background: linear-gradient(90deg, #fff, #9ca3af);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.ad-slot-header {
+    display: none;
+    /* Hidden until monetization strategy is active */
+    width: 320px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 12px;
+    letter-spacing: 1px;
+    border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+    .exp-top-bar {
+        height: auto;
+        flex-direction: column;
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .exp-top-bar h1 {
+        display: none;
+        /* Hide title on mobile to leave room for ad */
+    }
+
+    .ad-slot-header {
+        width: 100%;
+        max-width: 320px;
+    }
+}

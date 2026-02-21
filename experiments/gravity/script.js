@@ -130,6 +130,9 @@ document.getElementById('btnLine2').addEventListener('click', () => setMode('lin
 const toggleUiBtn = document.getElementById('toggleUiBtn');
 const uiPanel = document.getElementById('uiPanel');
 if (toggleUiBtn && uiPanel) {
+    if (window.innerWidth <= 600) {
+        uiPanel.classList.add('hidden');
+    }
     toggleUiBtn.addEventListener('click', () => {
         uiPanel.classList.toggle('hidden');
     });

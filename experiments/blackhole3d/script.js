@@ -12,6 +12,9 @@ const fpsVal = document.getElementById('fpsVal');
 const toggleHudBtn = document.getElementById('toggleHudBtn');
 const hud = document.getElementById('hud');
 if (toggleHudBtn && hud) {
+    if (window.innerWidth <= 600) {
+        hud.classList.add('hidden');
+    }
     toggleHudBtn.addEventListener('click', () => {
         hud.classList.toggle('hidden');
     });
