@@ -8,7 +8,8 @@ import { AdBanner } from "@/shared/ads";
 export default function NParticleSimulationPage() {
     const [stats, setStats] = useState({ particles: 0, fps: 0 });
     const [settings, setSettings] = useState({ speed: 1.0, size: 10, mode: 'single', camX: 0, camY: 0, camZ: 1500, panX: 0, panY: 0 });
-    const [isPanelOpen, setIsPanelOpen] = useState(false);
+    const [isMobileExpanded, setIsMobileExpanded] = useState(false);
+    const [isDesktopPanelOpen, setIsDesktopPanelOpen] = useState(true);
 
     // Mutable simulation state container
     const s = useRef({
@@ -104,9 +105,19 @@ export default function NParticleSimulationPage() {
     const init = (engine, w, h) => {
         const canvas = engine.ctx.canvas;
         
+        const setUIOpacity = (val) => {
+            document.querySelectorAll('.ui-panel').forEach(p => {
+                p.style.opacity = val;
+                p.style.pointerEvents = val === '0' ? 'none' : 'auto';
+            });
+        };
+
         canvas.addEventListener('contextmenu', (e) => e.preventDefault());
         
-        canvas.addEventListener('mouseleave', () => s.current.showCrosshair = false);
+        canvas.addEventListener('mouseleave', () => {
+            s.current.showCrosshair = false;
+            setUIOpacity('1');
+        });
 
         // Desktop Wheel Zoom
         canvas.addEventListener('wheel', (e) => {
@@ -118,10 +129,12 @@ export default function NParticleSimulationPage() {
 
         let mouseStartX = 0, mouseStartY = 0;
         let mouseStartTime = 0;
+        let isActivelyDraggingMouse = false;
 
         window.addEventListener('mousedown', (e) => {
             if (e.target.tagName !== 'CANVAS') return;
             s.current.isDraggingCamera = true;
+            isActivelyDraggingMouse = false;
             s.current.lastMouseX = e.clientX;
             s.current.lastMouseY = e.clientY - 64;
             mouseStartX = e.clientX;
@@ -142,6 +155,13 @@ export default function NParticleSimulationPage() {
             if (s.current.isDraggingCamera && e.target.tagName === 'CANVAS') {
                 const currentSettings = s.current.settingsRef;
                 let my = e.clientY - 64;
+                
+                let dist = Math.hypot(e.clientX - mouseStartX, my - mouseStartY);
+                if (dist > 5 && !isActivelyDraggingMouse) {
+                    isActivelyDraggingMouse = true;
+                    setUIOpacity('0');
+                }
+
                 if (s.current.mouseButton === 0) {
                     // Orbit
                     currentSettings.camX -= (e.clientX - s.current.lastMouseX) * 0.005;
@@ -168,6 +188,8 @@ export default function NParticleSimulationPage() {
                     handlePlacement(e.clientX, my, canvas.width, canvas.height, currentSettings.mode, currentSettings.size);
                 }
                 s.current.isDraggingCamera = false;
+                isActivelyDraggingMouse = false;
+                setUIOpacity('1');
             }
         });
 
@@ -176,11 +198,13 @@ export default function NParticleSimulationPage() {
         let touchStartTime = 0;
         let isPanning = false;
         let isOrbiting = false;
+        let isActivelyDraggingTouch = false;
         let lastPanX = 0, lastPanY = 0;
         
         canvas.addEventListener('touchstart', (e) => {
             if (e.target.tagName !== 'CANVAS') return;
             e.preventDefault();
+            isActivelyDraggingTouch = false;
 
             if (e.touches.length === 1) {
                 let touch = e.touches[0];
@@ -221,6 +245,12 @@ export default function NParticleSimulationPage() {
                 if (touch.identifier === activeTouchId) {
                     let ty = touch.clientY - 64;
                     
+                    let dist = Math.hypot(touch.clientX - touchStartX, ty - touchStartY);
+                    if (dist > 10 && !isActivelyDraggingTouch) {
+                        isActivelyDraggingTouch = true;
+                        setUIOpacity('0');
+                    }
+
                     s.current.mouseX = touch.clientX;
                     s.current.mouseY = ty;
                     
@@ -230,6 +260,11 @@ export default function NParticleSimulationPage() {
                     lx = touch.clientX; ly = ty;
                 }
             } else if (e.touches.length === 2 && isPanning) {
+                if (!isActivelyDraggingTouch) {
+                    isActivelyDraggingTouch = true;
+                    setUIOpacity('0');
+                }
+
                 let dx = e.touches[0].clientX - e.touches[1].clientX;
                 let dy = e.touches[0].clientY - e.touches[1].clientY;
                 let dist = Math.hypot(dx, dy);
@@ -271,7 +306,9 @@ export default function NParticleSimulationPage() {
                 activeTouchId = null;
                 isOrbiting = false;
                 isPanning = false;
+                isActivelyDraggingTouch = false;
                 s.current.showCrosshair = false;
+                setUIOpacity('1');
             } else if (e.touches.length === 1) {
                 let touch = e.touches[0];
                 activeTouchId = touch.identifier;
@@ -423,8 +460,91 @@ export default function NParticleSimulationPage() {
         ctx.globalAlpha = 1.0;
     };
 
+    const renderPanelContent = () => (
+        <>
+            <div className="flex items-center gap-2 mb-1">
+                <span className="text-xl">🐝</span>
+                <h2 className="text-xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-400">N-Particle</h2>
+            </div>
+            <p className="text-[10px] text-gray-400 tracking-wider mb-3 pb-2 border-b border-white/10 uppercase font-semibold">O(N²) 3D Swarm</p>
+            
+            <div className="grid grid-cols-2 gap-2 mb-3 bg-black/40 p-3 rounded-xl border border-white/5">
+                <div className="flex flex-col">
+                    <span className="text-gray-500 text-[9px] font-bold tracking-wider mb-0.5">PARTICLES</span>
+                    <span className="text-white font-mono text-lg leading-tight">{stats.particles}</span>
+                </div>
+                <div className="flex flex-col border-l border-white/10 pl-3">
+                    <span className="text-gray-500 text-[9px] font-bold tracking-wider mb-0.5">FPS</span>
+                    <span className={`font-mono text-lg leading-tight ${stats.fps < 30 ? 'text-red-400' : 'text-emerald-400'}`}>{stats.fps}</span>
+                </div>
+            </div>
+
+            <div className="space-y-3 max-h-[60vh] md:max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
+                
+                <div className="bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-xl mb-3">
+                    <ul className="text-[10px] text-emerald-200/80 space-y-1 leading-snug font-medium">
+                        <li className="flex items-center gap-1.5">
+                            <span className="text-emerald-400">🔄</span>
+                            <span><strong className="text-emerald-400">Orbit:</strong> 1-Finger Drag / Left Click</span>
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                            <span className="text-emerald-400">✋</span>
+                            <span><strong className="text-emerald-400">Pan:</strong> 2-Finger Drag / Right Click</span>
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                            <span className="text-emerald-400">🔍</span>
+                            <span><strong className="text-emerald-400">Zoom:</strong> Pinch / Scroll</span>
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                            <span className="text-emerald-400">✨</span>
+                            <span><strong className="text-emerald-400">Spawn:</strong> Quick Tap / Click</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div className="space-y-3">
+                    <div className="flex justify-between items-center mb-0.5">
+                        <label className="text-gray-400 text-[9px] font-bold tracking-wider">SPAWN TYPE</label>
+                    </div>
+                    <div className="flex gap-2 mb-3">
+                        <button onClick={() => setSettings(p => ({...p, mode: 'single'}))} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${settings.mode === 'single' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-[0_0_15px_rgba(52,211,153,0.3)]' : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/10'}`}>SINGLE</button>
+                        <button onClick={() => setSettings(p => ({...p, mode: 'circle'}))} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${settings.mode === 'circle' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-[0_0_15px_rgba(52,211,153,0.3)]' : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/10'}`}>BURST</button>
+                    </div>
+
+                    <div className="pt-2 border-t border-white/10 space-y-2">
+                        <div className="space-y-1">
+                            <div className="flex justify-between">
+                                <label className="text-gray-400 text-[9px] font-bold tracking-wider">PARTICLE SIZE / MASS</label>
+                                <span className="text-[9px] font-mono text-emerald-400">{settings.size}</span>
+                            </div>
+                            <input type="range" min="2" max="30" value={settings.size} onChange={(e) => setSettings(prev => ({...prev, size: parseInt(e.target.value)}))} className="w-full h-1 bg-gray-700 rounded-lg appearance-none accent-emerald-500 cursor-pointer" />
+                        </div>
+
+                        <div className="space-y-1">
+                            <div className="flex justify-between">
+                                <label className="text-gray-400 text-[9px] font-bold tracking-wider">TIME DIALATION</label>
+                                <span className="text-[9px] font-mono text-emerald-400">{settings.speed.toFixed(1)}x</span>
+                            </div>
+                            <input type="range" min="0.1" max="5.0" step="0.1" value={settings.speed} onChange={(e) => setSettings(prev => ({...prev, speed: parseFloat(e.target.value)}))} className="w-full h-1 bg-gray-700 rounded-lg appearance-none accent-emerald-500 cursor-pointer" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="pt-3 mt-3 border-t border-white/10 pb-4 md:pb-0">
+                    <button 
+                        onClick={() => { s.current.particles = []; setStats(p => ({...p, particles: 0})); }}
+                        className="w-full py-2 bg-red-500/10 border border-red-500/30 text-red-300 rounded-lg text-[10px] font-bold hover:bg-red-500/20 hover:text-white transition-all flex items-center justify-center gap-1.5"
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        CLEAR SWARM
+                    </button>
+                </div>
+            </div>
+        </>
+    );
+
     return (
-        <div className="relative w-full h-[calc(100vh-4rem)] bg-black overflow-hidden">
+        <div className="relative w-full h-[calc(100vh-4rem)] bg-black overflow-hidden select-none">
             <CanvasSimulation 
                 initSimulation={init}
                 updateSimulation={update}
@@ -434,95 +554,32 @@ export default function NParticleSimulationPage() {
             {/* Glowing ambient background orb for the dashboard */}
             <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-900/20 rounded-full blur-[100px] pointer-events-none" />
 
-            {/* Mobile Toggle Button */}
+            {/* --- DESKTOP PANEL TOGGLE BUTTON --- */}
             <button 
-                onClick={() => setIsPanelOpen(!isPanelOpen)}
-                className="md:hidden absolute top-6 right-6 z-50 bg-white/10 backdrop-blur-xl border border-white/20 p-3 rounded-xl shadow-2xl text-white flex items-center gap-2"
+                onClick={() => setIsDesktopPanelOpen(!isDesktopPanelOpen)}
+                className="hidden md:flex absolute top-6 right-6 z-50 bg-white/5 backdrop-blur-xl border border-white/20 p-3 rounded-full shadow-2xl text-white items-center justify-center transition-opacity duration-300 ui-panel hover:bg-white/10"
             >
-                <div className="w-5 h-5 flex flex-col justify-center gap-1">
-                    <div className={`h-0.5 bg-white transition-all ${isPanelOpen ? 'rotate-45 translate-y-1.5' : ''}`}></div>
-                    <div className={`h-0.5 bg-white transition-all ${isPanelOpen ? 'opacity-0' : ''}`}></div>
-                    <div className={`h-0.5 bg-white transition-all ${isPanelOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></div>
-                </div>
+                <svg className={`w-5 h-5 transition-transform duration-300 ${isDesktopPanelOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
             </button>
 
-            <div className={`absolute top-6 right-6 md:right-6 md:top-6 bg-white/5 backdrop-blur-xl p-6 rounded-2xl border border-white/10 text-sm text-white w-[320px] pointer-events-auto shadow-2xl transition-all duration-300 z-40 ${isPanelOpen ? 'opacity-100 translate-y-16 md:translate-y-0 visible' : 'opacity-0 md:opacity-100 invisible md:visible pointer-events-none md:pointer-events-auto'}`}>
-                <div className="flex items-center gap-3 mb-2">
-                    <span className="text-2xl">🐝</span>
-                    <h2 className="text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-400">N-Particle</h2>
+            {/* --- DESKTOP SIDE PANEL --- */}
+            <div className={`ui-panel hidden md:block absolute top-6 right-20 bg-white/5 backdrop-blur-3xl p-4 rounded-2xl border border-white/10 text-sm text-white w-[280px] pointer-events-auto shadow-2xl transition-all duration-300 z-40 ${isDesktopPanelOpen ? 'translate-x-0 opacity-100 visible' : 'translate-x-[120%] opacity-0 invisible pointer-events-none'}`}>
+                {renderPanelContent()}
+            </div>
+
+            {/* --- MOBILE BOTTOM SHEET --- */}
+            <div 
+                className={`ui-panel md:hidden fixed bottom-0 left-0 right-0 w-full bg-white/5 backdrop-blur-3xl border-t border-white/20 rounded-t-3xl pt-1 px-4 pb-4 z-40 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${isMobileExpanded ? 'h-[65vh]' : 'h-[140px]'}`}
+            >
+                {/* Pull tab area */}
+                <div 
+                    className="w-full flex justify-center py-2 cursor-pointer mb-1 relative"
+                    onClick={() => setIsMobileExpanded(!isMobileExpanded)}
+                >
+                    <div className="w-10 h-1 bg-white/20 rounded-full"></div>
                 </div>
-                <p className="text-xs text-gray-400 tracking-wider mb-6 pb-4 border-b border-white/10 uppercase font-semibold">O(N²) 3D Swarm</p>
-                
-                <div className="grid grid-cols-2 gap-3 mb-6 bg-black/40 p-4 rounded-xl border border-white/5">
-                    <div className="flex flex-col">
-                        <span className="text-gray-500 text-[10px] font-bold tracking-wider mb-1">PARTICLES</span>
-                        <span className="text-white font-mono text-xl">{stats.particles}</span>
-                    </div>
-                    <div className="flex flex-col border-l border-white/10 pl-3">
-                        <span className="text-gray-500 text-[10px] font-bold tracking-wider mb-1">FPS</span>
-                        <span className={`font-mono text-xl ${stats.fps < 30 ? 'text-red-400' : 'text-emerald-400'}`}>{stats.fps}</span>
-                    </div>
-                </div>
 
-                <div className="space-y-4 max-h-[60vh] md:max-h-none overflow-y-auto pr-2 custom-scrollbar">
-                    
-                    <div className="bg-emerald-500/5 border border-emerald-500/10 p-4 rounded-xl mb-4">
-                        <ul className="text-xs text-emerald-200/80 space-y-2 leading-relaxed font-medium">
-                            <li className="flex items-start gap-2">
-                                <span className="text-emerald-400 mt-0.5">🔄</span>
-                                <span><strong className="text-emerald-400">Orbit:</strong> 1-Finger Drag / Left Click</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-emerald-400 mt-0.5">✋</span>
-                                <span><strong className="text-emerald-400">Pan:</strong> 2-Finger Drag / Right Click</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-emerald-400 mt-0.5">🔍</span>
-                                <span><strong className="text-emerald-400">Zoom:</strong> Pinch / Scroll</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-emerald-400 mt-0.5">✨</span>
-                                <span><strong className="text-emerald-400">Spawn:</strong> Quick Tap / Click</span>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div className="flex justify-between items-center mb-1">
-                            <label className="text-gray-400 text-[10px] font-bold tracking-wider">SPAWN TYPE</label>
-                        </div>
-                        <div className="flex gap-2 mb-4">
-                            <button onClick={() => setSettings(p => ({...p, mode: 'single'}))} className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${settings.mode === 'single' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-[0_0_15px_rgba(52,211,153,0.3)]' : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/10'}`}>SINGLE</button>
-                            <button onClick={() => setSettings(p => ({...p, mode: 'circle'}))} className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${settings.mode === 'circle' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-[0_0_15px_rgba(52,211,153,0.3)]' : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/10'}`}>BURST</button>
-                        </div>
-
-                        <div className="pt-2 border-t border-white/10 space-y-3">
-                            <div className="space-y-1">
-                                <div className="flex justify-between">
-                                    <label className="text-gray-400 text-[10px] font-bold tracking-wider">PARTICLE SIZE / MASS</label>
-                                    <span className="text-[10px] font-mono text-emerald-400">{settings.size}</span>
-                                </div>
-                                <input type="range" min="2" max="30" value={settings.size} onChange={(e) => setSettings(prev => ({...prev, size: parseInt(e.target.value)}))} className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none accent-emerald-500 cursor-pointer" />
-                            </div>
-
-                            <div className="space-y-1">
-                                <div className="flex justify-between">
-                                    <label className="text-gray-400 text-[10px] font-bold tracking-wider">TIME DIALATION</label>
-                                    <span className="text-[10px] font-mono text-emerald-400">{settings.speed.toFixed(1)}x</span>
-                                </div>
-                                <input type="range" min="0.1" max="5.0" step="0.1" value={settings.speed} onChange={(e) => setSettings(prev => ({...prev, speed: parseFloat(e.target.value)}))} className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none accent-emerald-500 cursor-pointer" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <button 
-                        onClick={() => { s.current.particles = []; setStats(p => ({...p, particles: 0})); }}
-                        className="w-full mt-4 py-3 bg-red-500/10 border border-red-500/30 text-red-300 rounded-xl text-xs font-bold hover:bg-red-500/20 hover:text-white transition-all flex items-center justify-center gap-2"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        CLEAR SWARM
-                    </button>
-                </div>
+                {renderPanelContent()}
             </div>
 
             <AdBanner className="absolute bottom-4 left-0 right-0 z-10 pointer-events-none" />
