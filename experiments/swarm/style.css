@@ -45,8 +45,13 @@ canvas {
 
 #uiPanel.hidden {
     opacity: 0;
-    pointer-events: none;
+    pointer-events: none !important;
     transform: translateX(-20px);
+    visibility: hidden;
+}
+
+#uiPanel.hidden * {
+    pointer-events: none !important;
 }
 
 #uiPanel h2 {

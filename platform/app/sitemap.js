@@ -1,0 +1,14 @@
+import { siteConfig } from "@/shared/config";
+
+export default function sitemap() {
+  const routes = ["", "/gravity", "/blackhole", "/nparticle"].map(
+    (route) => ({
+      url: `${siteConfig.url}${route}`,
+      lastModified: new Date().toISOString(),
+      changeFrequency: "monthly",
+      priority: route === "" ? 1 : 0.8,
+    })
+  );
+
+  return [...routes];
+}

@@ -45,12 +45,18 @@ function resizeCanvas() {
     // Check mobile
     isMobile = width <= 600;
     if (isMobile) {
-        hintEl.innerText = "Tap screen to spawn particles";
+        hintEl.innerHTML = "<strong>Left Side:</strong> Drag Camera <br> <strong>Right Side:</strong> Tap to Spawn";
+        document.querySelector('.mobile-only-hint').style.display = 'block';
+        hintEl.style.display = 'none';
+
         // Auto-hide UI on load for mobile
         if(particles.length === 0) {
             uiPanel.classList.add('hidden');
+            uiPanel.style.pointerEvents = 'none';
         }
     } else {
+        document.querySelector('.mobile-only-hint').style.display = 'none';
+        hintEl.style.display = 'block';
         hintEl.innerHTML = "<strong>Keys 1-3 or Ctrl+Click</strong> to spawn";
     }
 }
@@ -60,6 +66,12 @@ resizeCanvas();
 // UI Toggles
 toggleUiBtn.addEventListener('click', () => {
     uiPanel.classList.toggle('hidden');
+    // Prevent hidden UI from blocking touches
+    if (uiPanel.classList.contains('hidden')) {
+        uiPanel.style.pointerEvents = 'none';
+    } else {
+        uiPanel.style.pointerEvents = 'auto';
+    }
 });
 
 // ------------------------------------------------------------------
@@ -222,24 +234,69 @@ window.addEventListener('mousemove', (e) => {
 });
 window.addEventListener('mouseup', () => { isDraggingCamera = false; });
 
-// Mobile Touch
+// Mobile Touch (Split Screen Controls)
+let leftTouchId = null;
+let rightTouchId = null;
+let lastLeftTouchX = 0;
+let lastLeftTouchY = 0;
+
 window.addEventListener('touchstart', (e) => {
     if (e.target.tagName.toLowerCase() !== 'canvas') return;
-    isDraggingCamera = true;
-    lastMouseX = e.touches[0].clientX;
-    lastMouseY = e.touches[0].clientY;
-    if (e.touches.length === 1) handlePlacement(lastMouseX, lastMouseY);
-});
+    e.preventDefault(); // Prevent scrolling
+    
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        let touch = e.changedTouches[i];
+        
+        // Left half of screen: Camera Joystick
+        if (touch.clientX < width / 2 && leftTouchId === null) {
+            leftTouchId = touch.identifier;
+            lastLeftTouchX = touch.clientX;
+            lastLeftTouchY = touch.clientY;
+        } 
+        // Right half of screen: Spawn Particles
+        else if (touch.clientX >= width / 2 && rightTouchId === null) {
+            rightTouchId = touch.identifier;
+            handlePlacement(touch.clientX, touch.clientY);
+        }
+    }
+}, { passive: false });
+
 window.addEventListener('touchmove', (e) => {
-    if (isDraggingCamera && e.touches.length > 0) {
-        cameraAngleX -= (e.touches[0].clientX - lastMouseX) * 0.01;
-        cameraAngleY += (e.touches[0].clientY - lastMouseY) * 0.01;
-        cameraAngleY = Math.max(-1.5, Math.min(1.5, cameraAngleY));
-        lastMouseX = e.touches[0].clientX;
-        lastMouseY = e.touches[0].clientY;
+    if (e.target.tagName.toLowerCase() !== 'canvas') return;
+    e.preventDefault();
+    
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        let touch = e.changedTouches[i];
+        
+        // Handle Camera Rotation on Left side drag
+        if (touch.identifier === leftTouchId) {
+            cameraAngleX -= (touch.clientX - lastLeftTouchX) * 0.01;
+            cameraAngleY += (touch.clientY - lastLeftTouchY) * 0.01;
+            cameraAngleY = Math.max(-1.5, Math.min(1.5, cameraAngleY)); // Limit up/down
+            lastLeftTouchX = touch.clientX;
+            lastLeftTouchY = touch.clientY;
+        }
+        // Optional: Can enable drag-to-spawn on right side here if desired
+        // else if (touch.identifier === rightTouchId) {
+        //     handlePlacement(touch.clientX, touch.clientY);
+        // }
+    }
+}, { passive: false });
+
+window.addEventListener('touchend', (e) => {
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        let touch = e.changedTouches[i];
+        if (touch.identifier === leftTouchId) leftTouchId = null;
+        if (touch.identifier === rightTouchId) rightTouchId = null;
     }
 });
-window.addEventListener('touchend', () => { isDraggingCamera = false; });
+window.addEventListener('touchcancel', (e) => {
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        let touch = e.changedTouches[i];
+        if (touch.identifier === leftTouchId) leftTouchId = null;
+        if (touch.identifier === rightTouchId) rightTouchId = null;
+    }
+});
 
 // ------------------------------------------------------------------
 // Main Loop

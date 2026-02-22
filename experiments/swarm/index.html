@@ -27,7 +27,12 @@
             <p>FPS: <span id="fpsCount">0</span></p>
         </div>
         <div class="controls">
-            <p class="hide-mobile" id="controlHint">Select shape to spawn, then <strong>Click/Tap</strong> canvas</p>
+            <p class="hide-mobile" id="controlHint"><strong>Click</strong> to spawn. <strong>Shift+Drag</strong> to rotate Camera.</p>
+            <div class="mobile-only-hint" style="display: none; padding: 10px; background: rgba(0, 200, 255, 0.1); border-radius: 6px; margin-bottom: 15px; font-size: 13px; text-align: center; border: 1px solid rgba(0, 200, 255, 0.3);">
+                <strong>Mobile Controls:</strong><br>
+                Left Half = Drag to Rotate 3D Camera<br>
+                Right Half = Tap to Spawn Particles
+            </div>
             <div class="action-buttons">
                 <button id="btnSingle" class="active">Single</button>
                 <button id="btnCircle">Circle</button>
