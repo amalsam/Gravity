@@ -30,6 +30,9 @@ export default function NParticleSimulationPage() {
         lastMouseX: 0,
         lastMouseY: 0,
         lastPinchDist: 0,
+        mouseX: 0,
+        mouseY: 0,
+        showCrosshair: false,
         lastFpsTime: performance.now(),
         framesThisSecond: 0,
         COLORS: ['rgb(255, 0, 0)', 'rgb(0, 255, 0)', 'rgb(0, 0, 255)'],
@@ -63,10 +66,9 @@ export default function NParticleSimulationPage() {
         s.current.particles.push(p);
     };
 
-    const handlePlacement = (screenX, screenY, width, height, mode, radius) => {
+    const getSpawnPos = (screenX, screenY, width, height, c) => {
         const nx = screenX - width / 2;
         const ny = screenY - height / 2;
-        const c = s.current;
 
         let rayDirX = nx * c.right.x + ny * c.up.x + c.fov * c.fwd.x;
         let rayDirY = nx * c.right.y + ny * c.up.y + c.fov * c.fwd.y;
@@ -75,19 +77,25 @@ export default function NParticleSimulationPage() {
         let rayMag = Math.sqrt(rayDirX**2 + rayDirY**2 + rayDirZ**2);
         rayDirX /= rayMag; rayDirY /= rayMag; rayDirZ /= rayMag;
 
-        let t = (1000 - c.cam.z) / rayDirZ;
-        if (t < 0 || Math.abs(rayDirZ) < 0.001) t = 1000;
+        // Dynamic Depth: Spawn particles exactly at the camera's focal plane distance
+        let t = c.camRadius; 
 
-        let worldX = c.cam.x + t * rayDirX;
-        let worldY = c.cam.y + t * rayDirY;
-        let worldZ = c.cam.z + t * rayDirZ;
+        return {
+            x: c.cam.x + t * rayDirX,
+            y: c.cam.y + t * rayDirY,
+            z: c.cam.z + t * rayDirZ
+        };
+    };
 
-        if (mode === 'single') attemptAdd(new Particle3D(worldX, worldY, worldZ, radius));
+    const handlePlacement = (screenX, screenY, width, height, mode, radius) => {
+        const pos = getSpawnPos(screenX, screenY, width, height, s.current);
+
+        if (mode === 'single') attemptAdd(new Particle3D(pos.x, pos.y, pos.z, radius));
         else {
             for(let i=0; i<10; i++) attemptAdd(new Particle3D(
-                worldX + (Math.random()-0.5)*40,
-                worldY + (Math.random()-0.5)*40,
-                worldZ + (Math.random()-0.5)*40,
+                pos.x + (Math.random()-0.5)*40,
+                pos.y + (Math.random()-0.5)*40,
+                pos.z + (Math.random()-0.5)*40,
                 radius
             ));
         }
@@ -97,6 +105,8 @@ export default function NParticleSimulationPage() {
         const canvas = engine.ctx.canvas;
         
         canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+        
+        canvas.addEventListener('mouseleave', () => s.current.showCrosshair = false);
 
         // Desktop Wheel Zoom
         canvas.addEventListener('wheel', (e) => {
@@ -121,6 +131,14 @@ export default function NParticleSimulationPage() {
         });
 
         window.addEventListener('mousemove', (e) => {
+            if (e.target.tagName === 'CANVAS') {
+                s.current.mouseX = e.clientX;
+                s.current.mouseY = e.clientY - 64;
+                s.current.showCrosshair = true;
+            } else {
+                s.current.showCrosshair = false;
+            }
+
             if (s.current.isDraggingCamera && e.target.tagName === 'CANVAS') {
                 const currentSettings = s.current.settingsRef;
                 let my = e.clientY - 64;
@@ -172,9 +190,15 @@ export default function NParticleSimulationPage() {
                 touchStartX = lx;
                 touchStartY = ly;
                 touchStartTime = performance.now();
+                
+                s.current.mouseX = lx;
+                s.current.mouseY = ly;
+                s.current.showCrosshair = true;
+                
                 isOrbiting = true;
                 isPanning = false;
             } else if (e.touches.length === 2) {
+                s.current.showCrosshair = false;
                 isOrbiting = false;
                 isPanning = true;
                 activeTouchId = null;
@@ -196,6 +220,10 @@ export default function NParticleSimulationPage() {
                 let touch = e.touches[0];
                 if (touch.identifier === activeTouchId) {
                     let ty = touch.clientY - 64;
+                    
+                    s.current.mouseX = touch.clientX;
+                    s.current.mouseY = ty;
+                    
                     currentSettings.camX -= (touch.clientX - lx) * 0.01;
                     currentSettings.camY += (ty - ly) * 0.01;
                     currentSettings.camY = Math.max(-1.5, Math.min(1.5, currentSettings.camY));
@@ -243,11 +271,15 @@ export default function NParticleSimulationPage() {
                 activeTouchId = null;
                 isOrbiting = false;
                 isPanning = false;
+                s.current.showCrosshair = false;
             } else if (e.touches.length === 1) {
                 let touch = e.touches[0];
                 activeTouchId = touch.identifier;
                 lx = touch.clientX;
                 ly = touch.clientY - 64;
+                s.current.mouseX = lx;
+                s.current.mouseY = ly;
+                s.current.showCrosshair = true;
                 isOrbiting = true;
                 isPanning = false;
             }
@@ -346,6 +378,48 @@ export default function NParticleSimulationPage() {
             ctx.fillStyle = p.color;
             ctx.fill();
         }
+
+        // Draw Crosshair Indicator 
+        if (c.showCrosshair) {
+            let crossPos = getSpawnPos(c.mouseX, c.mouseY, width, height, c);
+            let dx = crossPos.x - c.cam.x, dy = crossPos.y - c.cam.y, dz = crossPos.z - c.cam.z;
+            let depth = dx * c.fwd.x + dy * c.fwd.y + dz * c.fwd.z;
+            
+            if (depth >= 10) {
+                let scale = c.fov / depth;
+                let projX = dx * c.right.x + dy * c.right.y + dz * c.right.z;
+                let projY = dx * c.up.x    + dy * c.up.y    + dz * c.up.z;
+                
+                let drawnX = width / 2 + projX * scale;
+                let drawnY = height / 2 + projY * scale;
+                
+                // Scale the crosshair based on depth to show 3D perspective
+                let crossSize = 18 * scale;
+                
+                ctx.globalAlpha = 1.0;
+                ctx.strokeStyle = 'rgba(52, 211, 153, 0.45)'; // Emerald text color match
+                ctx.lineWidth = 1.5;
+                
+                // Draw inner dot
+                ctx.beginPath();
+                ctx.arc(drawnX, drawnY, Math.max(1, 2 * scale), 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Draw bounding reticle pieces
+                ctx.beginPath();
+                ctx.moveTo(drawnX - crossSize * 1.5, drawnY);
+                ctx.lineTo(drawnX - crossSize * 0.5, drawnY);
+                ctx.moveTo(drawnX + crossSize * 0.5, drawnY);
+                ctx.lineTo(drawnX + crossSize * 1.5, drawnY);
+                
+                ctx.moveTo(drawnX, drawnY - crossSize * 1.5);
+                ctx.lineTo(drawnX, drawnY - crossSize * 0.5);
+                ctx.moveTo(drawnX, drawnY + crossSize * 0.5);
+                ctx.lineTo(drawnX, drawnY + crossSize * 1.5);
+                ctx.stroke();
+            }
+        }
+
         ctx.globalAlpha = 1.0;
     };
 
