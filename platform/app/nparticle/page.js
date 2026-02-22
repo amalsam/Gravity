@@ -7,7 +7,7 @@ import { AdBanner } from "@/shared/ads";
 
 export default function NParticleSimulationPage() {
     const [stats, setStats] = useState({ particles: 0, fps: 0 });
-    const [settings, setSettings] = useState({ speed: 1.0, size: 10, mode: 'single', interactionMode: 'spawn', camX: 0, camY: 0, camZ: 1500 });
+    const [settings, setSettings] = useState({ speed: 1.0, size: 10, mode: 'single', camX: 0, camY: 0, camZ: 1500, panX: 0, panY: 0 });
     const [isPanelOpen, setIsPanelOpen] = useState(false);
 
     // Mutable simulation state container
@@ -101,65 +101,89 @@ export default function NParticleSimulationPage() {
         // Desktop Wheel Zoom
         canvas.addEventListener('wheel', (e) => {
             const currentSettings = s.current.settingsRef;
-            if (currentSettings.interactionMode === 'camera') {
-                e.preventDefault();
-                currentSettings.camZ += e.deltaY;
-                currentSettings.camZ = Math.max(200, Math.min(6000, currentSettings.camZ));
-            }
+            e.preventDefault();
+            currentSettings.camZ += e.deltaY;
+            currentSettings.camZ = Math.max(200, Math.min(6000, currentSettings.camZ));
         }, { passive: false });
+
+        let mouseStartX = 0, mouseStartY = 0;
+        let mouseStartTime = 0;
 
         window.addEventListener('mousedown', (e) => {
             if (e.target.tagName !== 'CANVAS') return;
-            const currentSettings = s.current.settingsRef;
-            
-            if (currentSettings.interactionMode === 'spawn') {
-                handlePlacement(e.clientX, e.clientY - 64, canvas.width, canvas.height, currentSettings.mode, currentSettings.size);
-                s.current.isDraggingCamera = true; // REUSED FLAG FOR DRAG SPAWNING
-            } else if (currentSettings.interactionMode === 'camera') {
-                s.current.isDraggingCamera = true;
-                s.current.lastMouseX = e.clientX;
-                s.current.lastMouseY = e.clientY - 64;
-            }
+            s.current.isDraggingCamera = true;
+            s.current.lastMouseX = e.clientX;
+            s.current.lastMouseY = e.clientY - 64;
+            mouseStartX = e.clientX;
+            mouseStartY = e.clientY - 64;
+            mouseStartTime = performance.now();
+            s.current.mouseButton = e.button; // 0=left, 1=middle, 2=right
         });
 
         window.addEventListener('mousemove', (e) => {
             if (s.current.isDraggingCamera && e.target.tagName === 'CANVAS') {
                 const currentSettings = s.current.settingsRef;
-                if (currentSettings.interactionMode === 'spawn') {
-                    handlePlacement(e.clientX, e.clientY - 64, canvas.width, canvas.height, currentSettings.mode, currentSettings.size);
-                } else if (currentSettings.interactionMode === 'camera') {
+                let my = e.clientY - 64;
+                if (s.current.mouseButton === 0) {
+                    // Orbit
                     currentSettings.camX -= (e.clientX - s.current.lastMouseX) * 0.005;
-                    currentSettings.camY += (e.clientY - 64 - s.current.lastMouseY) * 0.005;
+                    currentSettings.camY += (my - s.current.lastMouseY) * 0.005;
                     currentSettings.camY = Math.max(-1.5, Math.min(1.5, currentSettings.camY));
-                    s.current.lastMouseX = e.clientX;
-                    s.current.lastMouseY = e.clientY - 64;
+                } else if (s.current.mouseButton === 2 || s.current.mouseButton === 1) {
+                    // Pan
+                    currentSettings.panX -= (e.clientX - s.current.lastMouseX) * 2;
+                    currentSettings.panY -= (my - s.current.lastMouseY) * 2;
                 }
+                s.current.lastMouseX = e.clientX;
+                s.current.lastMouseY = my;
             }
         });
-        window.addEventListener('mouseup', () => s.current.isDraggingCamera = false);
+        window.addEventListener('mouseup', (e) => {
+            if (s.current.isDraggingCamera) {
+                const currentSettings = s.current.settingsRef;
+                let my = e.clientY - 64;
+                let dist = Math.hypot(e.clientX - mouseStartX, my - mouseStartY);
+                let time = performance.now() - mouseStartTime;
+
+                if (dist < 5 && time < 300) {
+                    // Quick click -> Spawn
+                    handlePlacement(e.clientX, my, canvas.width, canvas.height, currentSettings.mode, currentSettings.size);
+                }
+                s.current.isDraggingCamera = false;
+            }
+        });
 
         let activeTouchId = null, lx = 0, ly = 0;
+        let touchStartX = 0, touchStartY = 0;
+        let touchStartTime = 0;
+        let isPanning = false;
+        let isOrbiting = false;
+        let lastPanX = 0, lastPanY = 0;
         
         canvas.addEventListener('touchstart', (e) => {
             if (e.target.tagName !== 'CANVAS') return;
             e.preventDefault();
-            const currentSettings = s.current.settingsRef;
 
             if (e.touches.length === 1) {
                 let touch = e.touches[0];
-                let ty = touch.clientY - 64;
                 activeTouchId = touch.identifier;
                 lx = touch.clientX;
-                ly = ty;
-                
-                if (currentSettings.interactionMode === 'spawn') {
-                    handlePlacement(touch.clientX, ty, canvas.width, canvas.height, currentSettings.mode, currentSettings.size);
-                }
-            } else if (e.touches.length === 2 && currentSettings.interactionMode === 'camera') {
+                ly = touch.clientY - 64;
+                touchStartX = lx;
+                touchStartY = ly;
+                touchStartTime = performance.now();
+                isOrbiting = true;
+                isPanning = false;
+            } else if (e.touches.length === 2) {
+                isOrbiting = false;
+                isPanning = true;
                 activeTouchId = null;
                 let dx = e.touches[0].clientX - e.touches[1].clientX;
                 let dy = e.touches[0].clientY - e.touches[1].clientY;
                 s.current.lastPinchDist = Math.hypot(dx, dy);
+                
+                lastPanX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                lastPanY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - 64;
             }
         }, {passive: false});
 
@@ -168,32 +192,65 @@ export default function NParticleSimulationPage() {
             e.preventDefault();
             const currentSettings = s.current.settingsRef;
 
-            if (e.touches.length === 1 && activeTouchId !== null) {
+            if (e.touches.length === 1 && isOrbiting) {
                 let touch = e.touches[0];
                 if (touch.identifier === activeTouchId) {
                     let ty = touch.clientY - 64;
-                    if (currentSettings.interactionMode === 'spawn') {
-                        handlePlacement(touch.clientX, ty, canvas.width, canvas.height, currentSettings.mode, currentSettings.size);
-                    } else if (currentSettings.interactionMode === 'camera') {
-                        currentSettings.camX -= (touch.clientX - lx) * 0.01;
-                        currentSettings.camY += (ty - ly) * 0.01;
-                        currentSettings.camY = Math.max(-1.5, Math.min(1.5, currentSettings.camY));
-                        lx = touch.clientX; ly = ty;
-                    }
+                    currentSettings.camX -= (touch.clientX - lx) * 0.01;
+                    currentSettings.camY += (ty - ly) * 0.01;
+                    currentSettings.camY = Math.max(-1.5, Math.min(1.5, currentSettings.camY));
+                    lx = touch.clientX; ly = ty;
                 }
-            } else if (e.touches.length === 2 && currentSettings.interactionMode === 'camera') {
+            } else if (e.touches.length === 2 && isPanning) {
                 let dx = e.touches[0].clientX - e.touches[1].clientX;
                 let dy = e.touches[0].clientY - e.touches[1].clientY;
                 let dist = Math.hypot(dx, dy);
+                
+                // Zoom
                 let diff = s.current.lastPinchDist - dist;
                 currentSettings.camZ += diff * 5; 
                 currentSettings.camZ = Math.max(200, Math.min(6000, currentSettings.camZ));
                 s.current.lastPinchDist = dist;
+
+                // Pan
+                let panX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                let panY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - 64;
+                
+                currentSettings.panX -= (panX - lastPanX) * 2;
+                currentSettings.panY -= (panY - lastPanY) * 2;
+                
+                lastPanX = panX;
+                lastPanY = panY;
             }
         }, {passive: false});
         
         const endTouch = (e) => {
-            if (e.touches.length === 0) activeTouchId = null;
+            const currentSettings = s.current.settingsRef;
+            if (e.changedTouches.length > 0) {
+                let touch = e.changedTouches[0];
+                if (touch.identifier === activeTouchId && isOrbiting) {
+                    let ty = touch.clientY - 64;
+                    let dist = Math.hypot(touch.clientX - touchStartX, ty - touchStartY);
+                    let time = performance.now() - touchStartTime;
+                    
+                    if (dist < 10 && time < 300) {
+                        // Quick tap -> Spawn
+                        handlePlacement(touch.clientX, ty, canvas.width, canvas.height, currentSettings.mode, currentSettings.size);
+                    }
+                }
+            }
+            if (e.touches.length === 0) {
+                activeTouchId = null;
+                isOrbiting = false;
+                isPanning = false;
+            } else if (e.touches.length === 1) {
+                let touch = e.touches[0];
+                activeTouchId = touch.identifier;
+                lx = touch.clientX;
+                ly = touch.clientY - 64;
+                isOrbiting = true;
+                isPanning = false;
+            }
         };
         canvas.addEventListener('touchend', endTouch);
         canvas.addEventListener('touchcancel', endTouch);
@@ -234,11 +291,15 @@ export default function NParticleSimulationPage() {
         const height = engine.ctx.canvas.height;
         let radius = c.camRadius;
         
-        c.cam.x = (width/2) + radius * Math.cos(c.cameraAngleY) * Math.sin(c.cameraAngleX);
-        c.cam.y = (height/2) + radius * Math.sin(c.cameraAngleY);
-        c.cam.z = 1000 + radius * Math.cos(c.cameraAngleY) * Math.cos(c.cameraAngleX);
+        let targetX = (width/2) + currentSettings.panX;
+        let targetY = (height/2) + currentSettings.panY;
+        let targetZ = 1000;
 
-        c.fwd.x = (width/2) - c.cam.x; c.fwd.y = (height/2) - c.cam.y; c.fwd.z = 1000 - c.cam.z;
+        c.cam.x = targetX + radius * Math.cos(c.cameraAngleY) * Math.sin(c.cameraAngleX);
+        c.cam.y = targetY + radius * Math.sin(c.cameraAngleY);
+        c.cam.z = targetZ + radius * Math.cos(c.cameraAngleY) * Math.cos(c.cameraAngleX);
+
+        c.fwd.x = targetX - c.cam.x; c.fwd.y = targetY - c.cam.y; c.fwd.z = targetZ - c.cam.z;
         let fMag = Math.hypot(c.fwd.x, c.fwd.y, c.fwd.z);
         c.fwd.x /= fMag; c.fwd.y /= fMag; c.fwd.z /= fMag;
 
@@ -331,31 +392,25 @@ export default function NParticleSimulationPage() {
 
                 <div className="space-y-4 max-h-[60vh] md:max-h-none overflow-y-auto pr-2 custom-scrollbar">
                     
-                    <div className="bg-emerald-500/10 border border-emerald-500/20 p-1.5 rounded-xl flex mb-4 relative z-0">
-                        {/* Selected background pill */}
-                        <div 
-                            className={`absolute top-1.5 bottom-1.5 w-[calc(50%-0.375rem)] bg-gradient-to-r from-emerald-600 to-teal-600 rounded-lg shadow-lg transition-transform duration-300 ease-out z-[-1] ${settings.interactionMode === 'camera' ? 'translate-x-[calc(100%+0.375rem)]' : 'translate-x-0'}`}
-                        />
-                        <button 
-                            onClick={() => setSettings(p => ({...p, interactionMode: 'spawn'}))} 
-                            className={`flex-1 py-2 text-xs font-bold transition-all ${settings.interactionMode === 'spawn' ? 'text-white' : 'text-emerald-400/50 hover:text-emerald-300'}`}
-                        >
-                            ✨ SPAWN
-                        </button>
-                        <button 
-                            onClick={() => setSettings(p => ({...p, interactionMode: 'camera'}))} 
-                            className={`flex-1 py-2 text-xs font-bold transition-all ${settings.interactionMode === 'camera' ? 'text-white' : 'text-emerald-400/50 hover:text-emerald-300'}`}
-                        >
-                            🎥 CAMERA
-                        </button>
-                    </div>
-
-                    <div className="bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-xl mb-4">
-                        <p className="text-xs text-emerald-200 leading-relaxed font-medium">
-                            {settings.interactionMode === 'spawn' 
-                                ? "Screen touches will inject fresh particles." 
-                                : "Screen touches will orbit and zoom the universe."}
-                        </p>
+                    <div className="bg-emerald-500/5 border border-emerald-500/10 p-4 rounded-xl mb-4">
+                        <ul className="text-xs text-emerald-200/80 space-y-2 leading-relaxed font-medium">
+                            <li className="flex items-start gap-2">
+                                <span className="text-emerald-400 mt-0.5">🔄</span>
+                                <span><strong className="text-emerald-400">Orbit:</strong> 1-Finger Drag / Left Click</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-emerald-400 mt-0.5">✋</span>
+                                <span><strong className="text-emerald-400">Pan:</strong> 2-Finger Drag / Right Click</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-emerald-400 mt-0.5">🔍</span>
+                                <span><strong className="text-emerald-400">Zoom:</strong> Pinch / Scroll</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-emerald-400 mt-0.5">✨</span>
+                                <span><strong className="text-emerald-400">Spawn:</strong> Quick Tap / Click</span>
+                            </li>
+                        </ul>
                     </div>
 
                     <div className="space-y-4">
