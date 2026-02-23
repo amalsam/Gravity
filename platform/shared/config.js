@@ -5,5 +5,5 @@ export const siteConfig = {
     description: "Interactive browser-based physics simulations — real-time gravity, black holes, and N-body particle systems built in WebGL.",
     url: "https://labs.stacklor.com",
     adsEnabled: true,
-    googleAnalyticsId: "G-XXXXXXXXXX", // Replace with actual measurement ID
+    googleAnalyticsId: "G-EQ943WFK5R",
 };
