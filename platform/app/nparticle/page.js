@@ -479,7 +479,7 @@ export default function NParticleSimulationPage() {
                 </div>
             </div>
 
-            <div className="space-y-3 max-h-[60vh] md:max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
+            <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
                 
                 <div className="bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-xl mb-3">
                     <ul className="text-[10px] text-emerald-200/80 space-y-1 leading-snug font-medium">
@@ -530,7 +530,7 @@ export default function NParticleSimulationPage() {
                     </div>
                 </div>
 
-                <div className="pt-3 mt-3 border-t border-white/10 pb-4 md:pb-0">
+                <div className="pt-3 mt-3 border-t border-white/10">
                     <button 
                         onClick={() => { s.current.particles = []; setStats(p => ({...p, particles: 0})); }}
                         className="w-full py-2 bg-red-500/10 border border-red-500/30 text-red-300 rounded-lg text-[10px] font-bold hover:bg-red-500/20 hover:text-white transition-all flex items-center justify-center gap-1.5"
@@ -540,6 +540,114 @@ export default function NParticleSimulationPage() {
                     </button>
                 </div>
             </div>
+        </>
+    );
+
+    const renderMobilePanelContent = () => (
+        <>
+            {/* === PEEK ROW: always visible === */}
+            <div className="flex items-center gap-2">
+                {/* Title + subtitle */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-lg">🐝</span>
+                    <div>
+                        <div className="text-sm font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-400 leading-none">N-Particle</div>
+                        <div className="text-[8px] text-gray-500 tracking-widest uppercase">O(N²) Swarm</div>
+                    </div>
+                </div>
+
+                {/* Live stats pills */}
+                <div className="flex gap-1.5 ml-auto shrink-0">
+                    <div className="flex flex-col items-center bg-black/40 border border-white/5 rounded-lg px-2.5 py-1">
+                        <span className="text-[8px] text-gray-500 font-bold tracking-wider">PTC</span>
+                        <span className="text-white font-mono text-xs leading-none">{stats.particles}</span>
+                    </div>
+                    <div className="flex flex-col items-center bg-black/40 border border-white/5 rounded-lg px-2.5 py-1">
+                        <span className="text-[8px] text-gray-500 font-bold tracking-wider">FPS</span>
+                        <span className={`font-mono text-xs leading-none ${stats.fps < 30 ? 'text-red-400' : 'text-emerald-400'}`}>{stats.fps}</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Spawn mode toggle — always in peek */}
+            <div className="flex gap-2 mt-2.5">
+                <button
+                    onClick={() => setSettings(p => ({...p, mode: 'single'}))}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-bold transition-all ${
+                        settings.mode === 'single'
+                            ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-[0_0_15px_rgba(52,211,153,0.25)]'
+                            : 'bg-white/5 text-gray-400 border border-white/10'
+                    }`}
+                >
+                    <span>✨</span> SINGLE
+                </button>
+                <button
+                    onClick={() => setSettings(p => ({...p, mode: 'circle'}))}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-bold transition-all ${
+                        settings.mode === 'circle'
+                            ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-[0_0_15px_rgba(52,211,153,0.25)]'
+                            : 'bg-white/5 text-gray-400 border border-white/10'
+                    }`}
+                >
+                    <span>💥</span> BURST
+                </button>
+            </div>
+
+            {/* === EXPANDED content === */}
+            {isMobileExpanded && (
+                <div className="mt-3 space-y-3 overflow-y-auto pr-0.5 custom-scrollbar" style={{maxHeight: 'calc(65vh - 130px)'}}>
+                    {/* Controls hint */}
+                    <div className="grid grid-cols-2 gap-1.5">
+                        {[
+                            { icon: '🔄', label: 'Orbit', hint: '1-Finger' },
+                            { icon: '✋', label: 'Pan',   hint: '2-Finger' },
+                            { icon: '🔍', label: 'Zoom',  hint: 'Pinch' },
+                            { icon: '✨', label: 'Spawn', hint: 'Quick Tap' },
+                        ].map(({ icon, label, hint }) => (
+                            <div key={label} className="flex items-center gap-1.5 bg-emerald-500/5 border border-emerald-500/10 rounded-lg px-2 py-1.5">
+                                <span className="text-sm">{icon}</span>
+                                <div>
+                                    <div className="text-[9px] font-bold text-emerald-400">{label}</div>
+                                    <div className="text-[8px] text-gray-500">{hint}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Sliders */}
+                    <div className="space-y-3 pt-2 border-t border-white/10">
+                        <div className="space-y-1.5">
+                            <div className="flex justify-between">
+                                <label className="text-gray-400 text-[9px] font-bold tracking-wider">PARTICLE SIZE / MASS</label>
+                                <span className="text-[9px] font-mono text-emerald-400">{settings.size}</span>
+                            </div>
+                            <input type="range" min="2" max="30" value={settings.size}
+                                onChange={(e) => setSettings(prev => ({...prev, size: parseInt(e.target.value)}))}
+                                className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none accent-emerald-500 cursor-pointer" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <div className="flex justify-between">
+                                <label className="text-gray-400 text-[9px] font-bold tracking-wider">TIME DILATION</label>
+                                <span className="text-[9px] font-mono text-emerald-400">{settings.speed.toFixed(1)}x</span>
+                            </div>
+                            <input type="range" min="0.1" max="5.0" step="0.1" value={settings.speed}
+                                onChange={(e) => setSettings(prev => ({...prev, speed: parseFloat(e.target.value)}))}
+                                className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none accent-emerald-500 cursor-pointer" />
+                        </div>
+                    </div>
+
+                    {/* Clear */}
+                    <div className="pt-2 border-t border-white/10">
+                        <button
+                            onClick={() => { s.current.particles = []; setStats(p => ({...p, particles: 0})); }}
+                            className="w-full py-2.5 bg-red-500/10 border border-red-500/30 text-red-300 rounded-xl text-[10px] font-bold hover:bg-red-500/20 hover:text-white transition-all flex items-center justify-center gap-1.5"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            CLEAR SWARM
+                        </button>
+                    </div>
+                </div>
+            )}
         </>
     );
 
@@ -568,18 +676,22 @@ export default function NParticleSimulationPage() {
             </div>
 
             {/* --- MOBILE BOTTOM SHEET --- */}
-            <div 
-                className={`ui-panel md:hidden fixed bottom-0 left-0 right-0 w-full bg-white/5 backdrop-blur-3xl border-t border-white/20 rounded-t-3xl pt-1 px-4 pb-4 z-40 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${isMobileExpanded ? 'h-[65vh]' : 'h-[140px]'}`}
+            <div
+                className={`ui-panel md:hidden fixed bottom-0 left-0 right-0 w-full bg-black/70 backdrop-blur-3xl border-t border-white/15 rounded-t-3xl z-40 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+                    isMobileExpanded ? 'h-[65vh]' : 'h-[110px]'
+                }`}
             >
-                {/* Pull tab area */}
-                <div 
-                    className="w-full flex justify-center py-2 cursor-pointer mb-1 relative"
+                {/* Pull tab — tapping whole tab row toggles expand */}
+                <div
+                    className="w-full flex justify-center pt-2 pb-1 cursor-pointer"
                     onClick={() => setIsMobileExpanded(!isMobileExpanded)}
                 >
-                    <div className="w-10 h-1 bg-white/20 rounded-full"></div>
+                    <div className={`w-10 h-1 rounded-full transition-colors duration-300 ${isMobileExpanded ? 'bg-emerald-400/50' : 'bg-white/20'}`} />
                 </div>
 
-                {renderPanelContent()}
+                <div className="px-4 pb-4">
+                    {renderMobilePanelContent()}
+                </div>
             </div>
 
             <AdBanner className="absolute bottom-4 left-0 right-0 z-10 pointer-events-none" />

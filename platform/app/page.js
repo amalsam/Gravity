@@ -44,15 +44,15 @@ export default function Home() {
       <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-blue-900/30 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-purple-900/20 rounded-full blur-[150px] pointer-events-none" />
 
-      <header className="relative pt-[80px] pb-[60px] px-5 text-center z-10">
-        <div className="max-w-[800px] mx-auto mb-10">
-          <div className="inline-block px-4 py-1.5 mb-6 rounded-full bg-white/5 border border-white/10 text-xs font-semibold tracking-wider text-gray-300 backdrop-blur-sm">
+      <header className="relative pt-10 pb-8 md:pt-[80px] md:pb-[60px] px-5 text-center z-10">
+        <div className="max-w-[800px] mx-auto mb-6 md:mb-10">
+          <div className="inline-block px-3 py-1 mb-4 md:mb-6 rounded-full bg-white/5 border border-white/10 text-[10px] md:text-xs font-semibold tracking-wider text-gray-300 backdrop-blur-sm">
             NEXT-GEN PHYSICS ENGINE
           </div>
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 text-white drop-shadow-2xl">
+          <h1 className="text-3xl md:text-7xl font-extrabold tracking-tight mb-3 md:mb-6 text-white drop-shadow-2xl">
             Universe <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">Simulator</span>
           </h1>
-          <p className="text-xl md:text-2xl text-gray-400 font-light max-w-2xl mx-auto leading-relaxed">
+          <p className="text-sm md:text-2xl text-gray-400 font-light max-w-2xl mx-auto leading-relaxed">
             Beautiful, high-fidelity browser simulations.
             <br className="hidden md:block"/> Experience real-time orbital mechanics and relativity.
           </p>
@@ -60,15 +60,15 @@ export default function Home() {
         <AdBanner dataAdSlot="top-ad" className="max-w-[728px] mx-auto min-h-[90px] rounded-xl overflow-hidden glass-panel" />
       </header>
 
-      <main className="relative max-w-[1200px] mx-auto mb-[100px] px-5 z-10">
-        <div className="flex items-center justify-between mb-10">
-          <h2 className="text-2xl font-bold text-white tracking-wide">
+      <main className="relative max-w-[1200px] mx-auto mb-10 md:mb-24 px-5 z-10">
+        <div className="flex items-center justify-between mb-6 md:mb-10">
+          <h2 className="text-lg md:text-2xl font-bold text-white tracking-wide">
             Available Modules <span className="text-gray-600 font-normal ml-2">({experiments.length})</span>
           </h2>
           <div className="h-[1px] flex-grow bg-gradient-to-r from-white/10 to-transparent ml-6"></div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
           {experiments.map((exp) => (
             <Link 
               key={exp.title} 
@@ -77,23 +77,23 @@ export default function Home() {
             >
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60 z-0 pointer-events-none" />
               
-              <div className={`h-[200px] flex items-center justify-center text-[5rem] relative overflow-hidden ${exp.background}`}>
+              <div className={`h-[120px] md:h-[200px] flex items-center justify-center text-[3.5rem] md:text-[5rem] relative overflow-hidden ${exp.background}`}>
                 {/* Inner Glow effect on hover */}
                 <div className={`absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-500 bg-gradient-to-tr ${exp.accent} mix-blend-overlay`} />
                 <span className="drop-shadow-2xl transform transition-transform duration-500 group-hover:scale-110 z-10">{exp.emoji}</span>
               </div>
               
-              <div className="p-8 flex flex-col flex-grow relative z-10">
-                <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">{exp.title}</h3>
-                <p className="text-base text-gray-400 flex-grow mb-8 leading-relaxed">
+              <div className="p-4 md:p-8 flex flex-col flex-grow relative z-10">
+                <h3 className="text-lg md:text-2xl font-bold text-white mb-1.5 md:mb-3 tracking-tight">{exp.title}</h3>
+                <p className="text-sm md:text-base text-gray-400 flex-grow mb-4 md:mb-8 leading-relaxed">
                   {exp.description}
                 </p>
-                <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/10">
-                  <span className={`text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r ${exp.accent}`}>
+                <div className="flex items-center justify-between mt-auto pt-3 md:pt-4 border-t border-white/10">
+                  <span className={`text-xs md:text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r ${exp.accent}`}>
                     ENTER SIMULATION
                   </span>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-white/5 border border-white/10 group-hover:bg-white/20 transition-colors`}>
-                    <svg className={`w-4 h-4 text-white transform transition-transform duration-300 group-hover:translate-x-1`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+                  <div className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center bg-white/5 border border-white/10 group-hover:bg-white/20 transition-colors`}>
+                    <svg className={`w-3.5 h-3.5 md:w-4 md:h-4 text-white transform transition-transform duration-300 group-hover:translate-x-1`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
                   </div>
                 </div>
               </div>
