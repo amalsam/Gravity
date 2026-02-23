@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import CanvasSimulation from "@/components/CanvasSimulation";
 import { AdBanner } from "@/shared/ads";
+import ScienceModal from "@/components/ScienceModal";
 
 export default function GravitySimulationPage() {
     const [particleCount, setParticleCount] = useState(0);
@@ -10,6 +11,7 @@ export default function GravitySimulationPage() {
     const [spawnMode, setSpawnMode] = useState("single");
     const [isDesktopPanelOpen, setIsDesktopPanelOpen] = useState(true);
     const [isMobileExpanded, setIsMobileExpanded] = useState(false);
+    const [showScience, setShowScience] = useState(false);
 
     // useRef keeps the same object across ALL re-renders
     // so event handlers in init(), update(), and buttons all share one live state
@@ -252,13 +254,20 @@ export default function GravitySimulationPage() {
                     </div>
                 </div>
 
-                <div className="pt-3 mt-3 border-t border-white/10">
+                <div className="pt-3 mt-3 border-t border-white/10 space-y-2">
                     <button 
                         onClick={() => { state.particles = []; setParticleCount(0); }}
                         className="w-full py-2 bg-red-500/10 border border-red-500/30 text-red-300 rounded-lg text-[10px] font-bold hover:bg-red-500/20 hover:text-white hover:border-red-500/50 transition-all duration-300 flex items-center justify-center gap-1.5"
                     >
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         PURGE PARTICLES
+                    </button>
+                    <button
+                        onClick={() => setShowScience(true)}
+                        className="w-full py-2 bg-blue-500/10 border border-blue-500/30 text-blue-300 rounded-lg text-[10px] font-bold hover:bg-blue-500/20 hover:text-white transition-all duration-300 flex items-center justify-center gap-1.5"
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        THE SCIENCE
                     </button>
                 </div>
             </div>
@@ -354,6 +363,16 @@ export default function GravitySimulationPage() {
                             PURGE PARTICLES
                         </button>
                     </div>
+                    {/* Science button in expanded view */}
+                    <div className="pt-2 border-t border-white/10">
+                        <button
+                            onClick={() => setShowScience(true)}
+                            className="w-full py-2.5 bg-blue-500/10 border border-blue-500/30 text-blue-300 rounded-xl text-[10px] font-bold hover:bg-blue-500/20 hover:text-white transition-all flex items-center justify-center gap-1.5"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                            THE SCIENCE
+                        </button>
+                    </div>
                 </div>
             )}
         </>
@@ -361,6 +380,43 @@ export default function GravitySimulationPage() {
 
     return (
         <div className="relative w-full h-[calc(100vh-4rem)] bg-black overflow-hidden select-none">
+            {showScience && (
+                <ScienceModal
+                    title="Gravity 2D — Orbital Mechanics"
+                    accentClass="text-blue-400 border-blue-400/30 bg-blue-400/10"
+                    onClose={() => setShowScience(false)}
+                    sections={[
+                        {
+                            heading: "Newtonian Gravity",
+                            text: "Each particle experiences a gravitational force from the central star. The force follows Newton's Law of Universal Gravitation — it grows stronger as particles get closer, creating the curved orbital paths seen in the simulation.",
+                            equations: [
+                                { label: "Force",      value: "F = G·M·m / r²" },
+                                { label: "Escape Vel", value: "v_e = √(2·G·M / r)" },
+                                { label: "Orbit Vel",  value: "v_c = √(G·M / r)" },
+                            ]
+                        },
+                        {
+                            heading: "Euler Integration — Particle Motion",
+                            text: "Position and velocity are updated every frame using semi-implicit Euler integration. This runs stably at 60 fps without full Runge-Kutta expense.",
+                            code:
+`// Gravitational acceleration towards star
+const dx = starX - this.x,  dy = starY - this.y;
+const r  = Math.sqrt(dx*dx + dy*dy);
+const a  = G * M / (r * r);   // |a| = G·M/r²
+
+// Semi-implicit Euler (update v first, then pos)
+this.vx += (dx/r) * a * DT;
+this.vy += (dy/r) * a * DT;
+this.x  += this.vx * DT;
+this.y  += this.vy * DT;`
+                        },
+                        {
+                            heading: "Orbit Formation",
+                            text: "Stable orbits form when centripetal acceleration equals gravitational acceleration: v²/r = GM/r², giving orbital speed v_c = √(GM/r). Particles spawned faster than escape velocity v_e = v_c·2 leave the system. Particles below orbital speed spiral inward. Mixed spawns produce the elliptical paths visible in this simulation."
+                        }
+                    ]}
+                />
+            )}
             <CanvasSimulation 
                 initSimulation={init}
                 updateSimulation={update}

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { AdBanner } from "@/shared/ads";
+import ScienceModal from "@/components/ScienceModal";
 
 export default function BlackHoleSimulationPage() {
     const containerRef = useRef(null);
@@ -13,6 +14,7 @@ export default function BlackHoleSimulationPage() {
         particles: 10000 
     });
     const [isDesktopPanelOpen, setIsDesktopPanelOpen] = useState(true);
+    const [showScience, setShowScience] = useState(false);
     const [isMobileExpanded, setIsMobileExpanded] = useState(false);
 
     // Refs for simulation state to prevent React re-renders from destroying WebGL context
@@ -382,11 +384,18 @@ export default function BlackHoleSimulationPage() {
                     <span className={`font-mono text-[10px] tracking-widest ${stats.fps < 30 ? 'text-red-400' : 'text-emerald-400'}`}>{stats.fps}</span>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-white/10">
+                <div className="mt-4 pt-3 border-t border-white/10 space-y-2">
                     <div className="bg-purple-500/10 border border-purple-500/20 p-3 rounded-xl flex flex-col gap-1.5">
                         <p className="text-[10px] text-purple-200 leading-snug"><strong className="text-white">Desktop:</strong> Drag to orbit, Scroll to zoom.</p>
                         <p className="text-[10px] text-purple-200 leading-snug"><strong className="text-white">Mobile:</strong> 1 Finger to orbit, 2 Fingers to pinch.</p>
                     </div>
+                    <button
+                        onClick={() => setShowScience(true)}
+                        className="w-full py-2 bg-purple-500/10 border border-purple-500/30 text-purple-300 rounded-lg text-[10px] font-bold hover:bg-purple-500/20 hover:text-white transition-all flex items-center justify-center gap-1.5"
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        THE SCIENCE
+                    </button>
                 </div>
             </div>
         </>
@@ -461,6 +470,47 @@ export default function BlackHoleSimulationPage() {
 
     return (
         <div className="relative w-full h-[calc(100vh-4rem)] bg-black overflow-hidden select-none">
+            {showScience && (
+                <ScienceModal
+                    title="3D Black Hole — Relativistic Simulation"
+                    accentClass="text-purple-400 border-purple-400/30 bg-purple-400/10"
+                    onClose={() => setShowScience(false)}
+                    sections={[
+                        {
+                            heading: "Schwarzschild Radius & Event Horizon",
+                            text: "The event horizon is the point of no return around a black hole. Any particle crossing it cannot escape. The radius is given by the Schwarzschild formula and depends only on mass — not charge or spin. In this simulation, particles within radius R_s = 50 units are consumed.",
+                            equations: [
+                                { label: "Sch. Radius", value: "R_s = 2GM / c²" },
+                                { label: "In sim",      value: "EVENT_HORIZON_RADIUS = 50 units" },
+                            ]
+                        },
+                        {
+                            heading: "Accretion Disk & Particle Orbits",
+                            text: "The glowing disk of matter spiralling into a black hole is called an accretion disk. Particles are attracted by Newtonian gravity and given initial tangential velocities to form orbits. The orange/white glow is from the primary particles; cyan/blue from secondary stream particles on a tighter orbit.",
+                            code:
+`// Gravitational force on each particle
+const dx = -p.position.x,   // towards origin
+      dy = -p.position.y,
+      dz = -p.position.z;
+const r2 = dx*dx + dy*dy + dz*dz;
+const r  = Math.sqrt(r2);
+const a  = G * M / r2;       // |a| = GM/r²
+
+p.velocity.x += (dx/r) * a * DT;
+p.velocity.y += (dy/r) * a * DT;
+p.velocity.z += (dz/r) * a * DT;`
+                        },
+                        {
+                            heading: "Gravitational Lensing Approximation",
+                            text: "Real black holes bend light around them — the famous 'Einstein ring'. This simulation approximates the lensing effect visually via a custom glow texture and a Schwarzschild-radius-based shadow sphere with a rim-lighting material. True general-relativistic ray tracing requires GPU shaders and is computationally intensive."
+                        },
+                        {
+                            heading: "Relativistic Doppler Beaming",
+                            text: "Matter moving towards you in an accretion disk appears brighter and bluer (blueshift); matter moving away appears dimmer and redder (redshift). This is called relativistic Doppler beaming. The warm-orange vs cool-cyan colour split across the disk approximates this effect, just as depicted in Interstellar's Gargantua."
+                        }
+                    ]}
+                />
+            )}
             <div ref={containerRef} className="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-auto" />
             
             {/* Glowing ambient background orb for the dashboard */}

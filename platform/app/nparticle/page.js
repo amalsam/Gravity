@@ -4,12 +4,14 @@ import { useState, useRef } from "react";
 import CanvasSimulation from "@/components/CanvasSimulation";
 import { applyGravity, handleCollision3D } from "@/core/physics";
 import { AdBanner } from "@/shared/ads";
+import ScienceModal from "@/components/ScienceModal";
 
 export default function NParticleSimulationPage() {
     const [stats, setStats] = useState({ particles: 0, fps: 0 });
     const [settings, setSettings] = useState({ speed: 1.0, size: 10, mode: 'single', camX: 0, camY: 0, camZ: 1500, panX: 0, panY: 0 });
     const [isMobileExpanded, setIsMobileExpanded] = useState(false);
     const [isDesktopPanelOpen, setIsDesktopPanelOpen] = useState(true);
+    const [showScience, setShowScience] = useState(false);
 
     // Mutable simulation state container
     const s = useRef({
@@ -538,6 +540,13 @@ export default function NParticleSimulationPage() {
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         CLEAR SWARM
                     </button>
+                    <button
+                        onClick={() => setShowScience(true)}
+                        className="w-full py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded-lg text-[10px] font-bold hover:bg-emerald-500/20 hover:text-white transition-all flex items-center justify-center gap-1.5"
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        THE SCIENCE
+                    </button>
                 </div>
             </div>
         </>
@@ -653,6 +662,52 @@ export default function NParticleSimulationPage() {
 
     return (
         <div className="relative w-full h-[calc(100vh-4rem)] bg-black overflow-hidden select-none">
+            {showScience && (
+                <ScienceModal
+                    title="N-Particle Sandbox — N-Body Simulation"
+                    accentClass="text-emerald-400 border-emerald-400/30 bg-emerald-400/10"
+                    onClose={() => setShowScience(false)}
+                    sections={[
+                        {
+                            heading: "O(N²) N-Body Gravitational Simulation",
+                            text: "In an N-body simulation, every particle exerts a gravitational force on every other particle. With N particles, that's N × (N-1) / 2 unique pairs to evaluate each frame — hence O(N²) computational complexity. This is the most accurate brute-force approach, making it expensive but perfectly faithful to the physics.",
+                            equations: [
+                                { label: "Pairs",    value: "N × (N-1) / 2 per frame" },
+                                { label: "Force",    value: "F_ij = G·m_i·m_j / r²" },
+                                { label: "Net accel",value: "a_i = Σ F_ij / m_i  (j ≠ i)" },
+                            ]
+                        },
+                        {
+                            heading: "Pairwise Force Calculation",
+                            text: "Each frame, all pairs (i, j) are iterated. The force on particle i from particle j is computed and applied equally and oppositely (Newton's 3rd Law), halving the computation.",
+                            code:
+`for (let i = 0; i < N; i++) {
+  for (let j = i + 1; j < N; j++) {
+    const dx = p[j].x - p[i].x;
+    const dy = p[j].y - p[i].y;
+    const dz = p[j].z - p[i].z;
+    const r2 = dx*dx + dy*dy + dz*dz + ε; // ε softens close encounters
+    const r  = Math.sqrt(r2);
+    const f  = G * p[i].mass * p[j].mass / r2;
+
+    // Apply equal and opposite forces (Newton 3rd Law)
+    p[i].vx += (dx/r) * f / p[i].mass * DT;
+    p[j].vx -= (dx/r) * f / p[j].mass * DT;
+    // ... similarly for vy, vz
+  }
+}`
+                        },
+                        {
+                            heading: "Emergent Behaviour & Cluster Formation",
+                            text: "Despite simple rules (gravity between pairs), complex structures emerge: particles clump into clusters, clusters orbit each other, and smaller groups get ejected at high speed via gravitational slingshot. This is the same physics driving galaxy formation — structure emerges purely from initial conditions and N-body gravity, with no explicit rules for clustering."
+                        },
+                        {
+                            heading: "Softening Parameter (ε)",
+                            text: "When two particles come very close (r → 0), raw Newtonian gravity diverges to infinity. A softening term ε is added to r² in the denominator to prevent unrealistic extreme forces at close range, making the simulation numerically stable: F = GM/(r² + ε)."
+                        }
+                    ]}
+                />
+            )}
             <CanvasSimulation 
                 initSimulation={init}
                 updateSimulation={update}
