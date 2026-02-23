@@ -24,6 +24,14 @@ export default function BlackHoleSimulationPage() {
 
     useEffect(() => {
         if (!containerRef.current) return;
+        let rafId;
+        let animationId;
+        let cleanupFn = null;
+
+        // Defer init by one rAF so Next.js SPA navigation has time to
+        // fully lay out the container before we read its clientWidth/Height
+        rafId = requestAnimationFrame(() => {
+        if (!containerRef.current) return;
 
         // --- CONSTANTS ---
         const G = 1.0;
@@ -35,11 +43,15 @@ export default function BlackHoleSimulationPage() {
 
         // --- SETUP ---
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 5000);
+        // Fallback to window size if container hasn't been laid out yet
+        const W = () => containerRef.current?.clientWidth  || window.innerWidth;
+        const H = () => containerRef.current?.clientHeight || (window.innerHeight - 64);
+
+        const camera = new THREE.PerspectiveCamera(60, W() / H(), 1, 5000);
         camera.position.set(0, 150, 600);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setSize(W(), H());
         renderer.setClearColor(0x000000, 1);
         
         // Append child specifically to our container
@@ -310,16 +322,18 @@ export default function BlackHoleSimulationPage() {
         };
 
         const onResize = () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.aspect = W() / H();
             camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setSize(W(), H());
         };
         window.addEventListener('resize', onResize);
+        onResize(); // sync camera AR + renderer size before first frame
         
         // Start loop
         animate();
 
-        return () => {
+        // Store cleanup so outer effect return can call it
+        cleanupFn = () => {
             window.removeEventListener('resize', onResize);
             cancelAnimationFrame(animationId);
             containerRef.current?.removeChild(renderer.domElement);
@@ -329,6 +343,12 @@ export default function BlackHoleSimulationPage() {
             materialSecondary.dispose();
             shadowMat.dispose();
             glowTex.dispose();
+        };
+        }); // end rAF
+
+        return () => {
+            cancelAnimationFrame(rafId);
+            if (typeof cleanupFn === 'function') cleanupFn();
         };
     }, []);
 

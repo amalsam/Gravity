@@ -1,9 +1,9 @@
 // Global Configuration for the Application
 
 export const siteConfig = {
-    name: "Unified Physics Platform",
-    description: "Interactive browser-based physics simulations including Gravity, Black Hole, and N-Particle.",
-    url: "https://your-domain.com", // To be updated by user
-    adsEnabled: true, // Toggle this to false to completely remove ads from the DOM
+    name: "Stacklor Lab",
+    description: "Interactive browser-based physics simulations — real-time gravity, black holes, and N-body particle systems built in WebGL.",
+    url: "https://labs.stacklor.com",
+    adsEnabled: true,
     googleAnalyticsId: "G-XXXXXXXXXX", // Replace with actual measurement ID
 };

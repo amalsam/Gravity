@@ -1,5 +1,7 @@
 import { siteConfig } from "@/shared/config";
 
+export const dynamic = 'force-static';
+
 export default function sitemap() {
   const routes = ["", "/gravity", "/blackhole", "/nparticle"].map(
     (route) => ({
