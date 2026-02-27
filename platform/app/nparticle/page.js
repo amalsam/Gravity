@@ -12,6 +12,7 @@ export default function NParticleSimulationPage() {
     const [isMobileExpanded, setIsMobileExpanded] = useState(false);
     const [isDesktopPanelOpen, setIsDesktopPanelOpen] = useState(true);
     const [showScience, setShowScience] = useState(false);
+    const swipeRef = useRef({ startY: 0, startX: 0 });
 
     // Mutable simulation state container
     const s = useRef({
@@ -645,14 +646,21 @@ export default function NParticleSimulationPage() {
                         </div>
                     </div>
 
-                    {/* Clear */}
-                    <div className="pt-2 border-t border-white/10">
+                    {/* Clear + Science */}
+                    <div className="pt-2 border-t border-white/10 space-y-2">
                         <button
                             onClick={() => { s.current.particles = []; setStats(p => ({...p, particles: 0})); }}
                             className="w-full py-2.5 bg-red-500/10 border border-red-500/30 text-red-300 rounded-xl text-[10px] font-bold hover:bg-red-500/20 hover:text-white transition-all flex items-center justify-center gap-1.5"
                         >
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             CLEAR SWARM
+                        </button>
+                        <button
+                            onClick={() => setShowScience(true)}
+                            className="w-full py-2.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded-xl text-[10px] font-bold hover:bg-emerald-500/20 hover:text-white transition-all flex items-center justify-center gap-1.5"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                            THE SCIENCE
                         </button>
                     </div>
                 </div>
@@ -735,13 +743,28 @@ export default function NParticleSimulationPage() {
                 className={`ui-panel md:hidden fixed bottom-0 left-0 right-0 w-full bg-black/70 backdrop-blur-3xl border-t border-white/15 rounded-t-3xl z-40 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
                     isMobileExpanded ? 'h-[65vh]' : 'h-[110px]'
                 }`}
+                onTouchStart={(e) => {
+                    swipeRef.current.startY = e.touches[0].clientY;
+                    swipeRef.current.startX = e.touches[0].clientX;
+                }}
+                onTouchEnd={(e) => {
+                    const dy = swipeRef.current.startY - e.changedTouches[0].clientY;
+                    const dx = Math.abs(swipeRef.current.startX - e.changedTouches[0].clientX);
+                    if (Math.abs(dy) > 40 && Math.abs(dy) > dx) {
+                        if (dy > 0) setIsMobileExpanded(true);
+                        else        setIsMobileExpanded(false);
+                    }
+                }}
             >
-                {/* Pull tab — tapping whole tab row toggles expand */}
+                {/* Drag handle — tap or swipe */}
                 <div
-                    className="w-full flex justify-center pt-2 pb-1 cursor-pointer"
+                    className="w-full flex flex-col items-center pt-2 pb-1 cursor-pointer gap-1"
                     onClick={() => setIsMobileExpanded(!isMobileExpanded)}
                 >
-                    <div className={`w-10 h-1 rounded-full transition-colors duration-300 ${isMobileExpanded ? 'bg-emerald-400/50' : 'bg-white/20'}`} />
+                    <div className={`w-10 h-1 rounded-full transition-colors duration-300 ${isMobileExpanded ? 'bg-emerald-400/50' : 'bg-white/30'}`} />
+                    {!isMobileExpanded && (
+                        <span className="text-[9px] text-white/30 tracking-widest uppercase animate-bounce">swipe up</span>
+                    )}
                 </div>
 
                 <div className="px-4 pb-4">

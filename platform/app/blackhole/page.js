@@ -16,6 +16,7 @@ export default function BlackHoleSimulationPage() {
     const [isDesktopPanelOpen, setIsDesktopPanelOpen] = useState(true);
     const [showScience, setShowScience] = useState(false);
     const [isMobileExpanded, setIsMobileExpanded] = useState(false);
+    const swipeRef = useRef({ startY: 0, startX: 0 });
 
     // Refs for simulation state to prevent React re-renders from destroying WebGL context
     const simState = useRef({
@@ -458,10 +459,17 @@ export default function BlackHoleSimulationPage() {
                         <span className="text-[10px] font-bold tracking-wider text-gray-500">ENGINE FPS</span>
                         <span className={`font-mono text-[10px] tracking-widest ${stats.fps < 30 ? 'text-red-400' : 'text-emerald-400'}`}>{stats.fps}</span>
                     </div>
-                    <div className="pt-2 border-t border-white/10">
+                    <div className="pt-2 border-t border-white/10 space-y-2">
                         <div className="bg-purple-500/10 border border-purple-500/20 p-3 rounded-xl">
                             <p className="text-[10px] text-purple-200 leading-snug">Particles respawn at the edge of the accretion disk after being consumed.</p>
                         </div>
+                        <button
+                            onClick={() => setShowScience(true)}
+                            className="w-full py-2.5 bg-purple-500/10 border border-purple-500/30 text-purple-300 rounded-xl text-[10px] font-bold hover:bg-purple-500/20 hover:text-white transition-all flex items-center justify-center gap-1.5"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                            THE SCIENCE
+                        </button>
                     </div>
                 </div>
             )}
@@ -534,12 +542,28 @@ p.velocity.z += (dz/r) * a * DT;`
                 className={`ui-panel md:hidden fixed bottom-0 left-0 right-0 w-full bg-black/70 backdrop-blur-3xl border-t border-white/15 rounded-t-3xl z-40 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
                     isMobileExpanded ? 'h-[65vh]' : 'h-[110px]'
                 }`}
+                onTouchStart={(e) => {
+                    swipeRef.current.startY = e.touches[0].clientY;
+                    swipeRef.current.startX = e.touches[0].clientX;
+                }}
+                onTouchEnd={(e) => {
+                    const dy = swipeRef.current.startY - e.changedTouches[0].clientY;
+                    const dx = Math.abs(swipeRef.current.startX - e.changedTouches[0].clientX);
+                    if (Math.abs(dy) > 40 && Math.abs(dy) > dx) {
+                        if (dy > 0) setIsMobileExpanded(true);
+                        else        setIsMobileExpanded(false);
+                    }
+                }}
             >
+                {/* Drag handle — tap or swipe */}
                 <div
-                    className="w-full flex justify-center pt-2 pb-1 cursor-pointer"
+                    className="w-full flex flex-col items-center pt-2 pb-1 cursor-pointer gap-1"
                     onClick={() => setIsMobileExpanded(!isMobileExpanded)}
                 >
-                    <div className={`w-10 h-1 rounded-full transition-colors duration-300 ${isMobileExpanded ? 'bg-purple-400/50' : 'bg-white/20'}`} />
+                    <div className={`w-10 h-1 rounded-full transition-colors duration-300 ${isMobileExpanded ? 'bg-purple-400/50' : 'bg-white/30'}`} />
+                    {!isMobileExpanded && (
+                        <span className="text-[9px] text-white/30 tracking-widest uppercase animate-bounce">swipe up</span>
+                    )}
                 </div>
                 <div className="px-4 pb-4">
                     {renderMobilePanelContent()}

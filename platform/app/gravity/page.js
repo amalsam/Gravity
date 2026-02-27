@@ -11,6 +11,7 @@ export default function GravitySimulationPage() {
     const [spawnMode, setSpawnMode] = useState("single");
     const [isDesktopPanelOpen, setIsDesktopPanelOpen] = useState(true);
     const [isMobileExpanded, setIsMobileExpanded] = useState(false);
+    const swipeRef = useRef({ startY: 0, startX: 0 });
     const [showScience, setShowScience] = useState(false);
 
     // useRef keeps the same object across ALL re-renders
@@ -445,12 +446,30 @@ this.y  += this.vy * DT;`
                 className={`ui-panel md:hidden fixed bottom-0 left-0 right-0 w-full bg-black/70 backdrop-blur-3xl border-t border-white/15 rounded-t-3xl z-40 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
                     isMobileExpanded ? 'h-[65vh]' : 'h-[110px]'
                 }`}
+                onTouchStart={(e) => {
+                    swipeRef.current.startY = e.touches[0].clientY;
+                    swipeRef.current.startX = e.touches[0].clientX;
+                }}
+                onTouchEnd={(e) => {
+                    const dy = swipeRef.current.startY - e.changedTouches[0].clientY;
+                    const dx = Math.abs(swipeRef.current.startX - e.changedTouches[0].clientX);
+                    // Only react to predominantly vertical swipes of >40px
+                    if (Math.abs(dy) > 40 && Math.abs(dy) > dx) {
+                        if (dy > 0) setIsMobileExpanded(true);   // swipe up  → expand
+                        else        setIsMobileExpanded(false);  // swipe down → collapse
+                    }
+                }}
             >
+                {/* Drag handle — tap or swipe */}
                 <div
-                    className="w-full flex justify-center pt-2 pb-1 cursor-pointer"
+                    className="w-full flex flex-col items-center pt-2 pb-1 cursor-pointer gap-1"
                     onClick={() => setIsMobileExpanded(!isMobileExpanded)}
                 >
-                    <div className={`w-10 h-1 rounded-full transition-colors duration-300 ${isMobileExpanded ? 'bg-blue-400/50' : 'bg-white/20'}`} />
+                    <div className={`w-10 h-1 rounded-full transition-colors duration-300 ${isMobileExpanded ? 'bg-blue-400/50' : 'bg-white/30'}`} />
+                    {/* Swipe hint label — only shown when collapsed */}
+                    {!isMobileExpanded && (
+                        <span className="text-[9px] text-white/30 tracking-widest uppercase animate-bounce">swipe up</span>
+                    )}
                 </div>
                 <div className="px-4 pb-4">
                     {renderMobilePanelContent()}
