@@ -10,7 +10,7 @@ import { ActionButton, Group, Hint, Icons, Segmented, Stats } from "@/components
 export default function GravitySimulationPage() {
     const [particleCount, setParticleCount] = useState(0);
     const [fps, setFps] = useState(0);
-    const [spawnMode, setSpawnMode] = useState("orbit");
+    const [spawnMode, setSpawnMode] = useState("single");
     const [showScience, setShowScience] = useState(false);
 
     // useRef keeps the same object across ALL re-renders
@@ -30,12 +30,11 @@ export default function GravitySimulationPage() {
             lastTime: performance.now(),
             frames: 0,
             lastSpawnTime: performance.now(),
-            spawnMode: 'orbit',
+            spawnMode: 'single',
         };
     }
     const state = stateRef.current;
 
-    const MAX_PARTICLES = 14000;
     // Circular-orbit speed for this 2D (1/r) force law: v = √(G·M), the same at every radius
     const V_ORBIT = Math.sqrt(0.1 * 10e7);
 
@@ -47,24 +46,22 @@ export default function GravitySimulationPage() {
             this.momentum_x = vx * this.mass;
             this.momentum_y = vy * this.mass;
         }
+        // Identical to the original simulation (same operations, same rounding)
         move(x2, y2, dt, G, M) {
-            const dx = x2 - this.x;
-            const dy = y2 - this.y;
-            const r2 = dx * dx + dy * dy;
-            if (r2 < 1) return;
-            // F = G·m·M / r along the unit vector (dx, dy)/r  →  G·m·M·(dx, dy)/r²
-            const k = (G * this.mass * M) / r2;
-            this.momentum_x += k * dx * dt;
-            this.momentum_y += k * dy * dt;
+            let dx = x2 - this.x;
+            let dy = y2 - this.y;
+            let hyp = Math.sqrt(dx * dx + dy * dy);
+            if (hyp < 1) return;
+            let theta = Math.atan2(dy, dx);
+            let force = (G * this.mass * M) / hyp;
+            this.momentum_x += force * Math.cos(theta) * dt;
+            this.momentum_y += force * Math.sin(theta) * dt;
             this.x += (this.momentum_x / this.mass) * dt;
             this.y += (this.momentum_y / this.mass) * dt;
         }
     }
 
-    const addParticle = (p) => {
-        if (state.particles.length >= MAX_PARTICLES) state.particles.shift();
-        state.particles.push(p);
-    };
+    const addParticle = (p) => state.particles.push(p);
 
     // A particle placed at (x, y) moving on a near-circular orbit around the star
     const orbiter = (x, y, spread = 0.12) => {
@@ -92,7 +89,6 @@ export default function GravitySimulationPage() {
 
     const init = (engine, width, height) => {
         placeStar(width);
-        seedDisk(window.innerWidth < 768 ? 900 : 1600, width, height - simTop());
 
         const canvas = engine.ctx.canvas;
         
@@ -215,7 +211,6 @@ export default function GravitySimulationPage() {
         for (let i = 0; i < state.particles.length; i++) {
             state.particles[i].move(state.obj1.x, state.obj1.y, state.DT, state.G, state.M);
         }
-        if (state.particles.length > MAX_PARTICLES) state.particles.splice(0, state.particles.length - MAX_PARTICLES);
     };
 
     // Speed relative to circular-orbit speed → colour (slow = deep blue, orbital = white, fast = amber)
@@ -287,13 +282,13 @@ export default function GravitySimulationPage() {
                 <>
                     <Group label="Brush">
                         <Segmented label="Spawn brush" value={spawnMode} onChange={setBrush} columns={2} options={[
-                            { value: "orbit", label: "Orbit" },
-                            { value: "single", label: "Drop" },
-                            { value: "circle", label: "Cluster" },
+                            { value: "single", label: "Single" },
+                            { value: "circle", label: "Circle" },
                             { value: "hline", label: "Horizontal line" },
                             { value: "vline", label: "Vertical line" },
+                            { value: "orbit", label: "Orbit" },
                         ]} />
-                        <Hint>Orbit paints particles already moving at orbital speed, so they stay. The others drop particles with a small sideways push and let gravity decide. On a keyboard, hold 1, 2 or 3 for rapid-fire patterns.</Hint>
+                        <Hint>Drag on the canvas to stream particles toward the star. On a keyboard, hold 1, 2 or 3 for rapid-fire patterns; Ctrl-click adds one particle. Orbit launches particles at orbital speed so they stay in orbit.</Hint>
                     </Group>
                     <Group label="Colour = speed">
                         <div className="h-2 rounded-full" style={{ background: "linear-gradient(90deg,#3b5bdb,#60a5fa,#bfdbfe,#ffffff,#fde68a,#fb923c)" }} aria-hidden="true" />

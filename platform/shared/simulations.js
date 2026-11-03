@@ -107,18 +107,18 @@ export const simulations = [
     category: "gravity",
     accent: "#60a5fa",
     tech: "2D Canvas",
-    tagline: "Paint thousands of particles into orbit and watch rosettes form.",
+    tagline: "Stream particles into a star and watch rosette orbits form.",
     title: "Gravity Simulator – Interactive 2D Orbital Mechanics",
     description:
-      "Free online gravity simulator. Paint thousands of glowing particles into orbit around a star and watch 2D gravity weave them into rosettes, rings and slingshots in real time.",
+      "Free online gravity simulator. Drag to stream glowing particles toward a star and watch 2D gravity bend them into rosette orbits, rings and slingshots in real time.",
     summary:
       "A gravity simulator set in a two-dimensional universe. In 2D, gravity weakens as 1/r rather than the familiar 1/r², which has two striking consequences you can see on screen: every circular orbit has the same speed, whatever its size, and orbits that aren't circular precess into flower-like rosettes instead of closing into ellipses. Particles are coloured by speed relative to orbital speed, so you can watch them fall inward (blue), circle (white) or swing outward (amber).",
     keywords: ["gravity simulator", "orbit simulator", "orbital mechanics simulation", "newtonian gravity", "physics sandbox"],
     howTo: [
-      "Drag anywhere to paint particles. The default Orbit brush launches them at orbital speed so they stay in orbit.",
-      "Switch to Drop, Cluster or a line brush to release particles with only a small push and watch gravity pull them into rosettes.",
-      "On a keyboard, hold 1, 2 or 3 for rapid-fire patterns; Ctrl-click adds a single particle.",
-      "Use Seed a disk to add a fresh orbiting disk, or Clear to start over.",
+      "Press and drag anywhere on the canvas to stream particles toward the star.",
+      "Choose a brush — single, circle, horizontal line or vertical line — to change how particles spawn. The Orbit brush launches them at orbital speed so they stay in orbit.",
+      "On a keyboard, hold 1, 2 or 3 for rapid-fire line, cluster and column patterns; Ctrl-click adds one particle.",
+      "Use Clear to start over, or Seed a disk to add a ready-made orbiting disk.",
     ],
     concepts: ["Gravity in two dimensions", "Circular orbital speed", "Orbital precession", "Bertrand's theorem", "Euler integration"],
     faq: [
