@@ -1,6 +1,6 @@
 # Stacklor Lab
 
-> Free interactive physics simulations that run in your browser: gravity and orbits, a 3D black hole, chaos and strange attractors, flocking, falling sand, electric fields and fluids.
+> Free interactive physics simulations and games that run in your browser: a gravity slingshot puzzle game, colliding galaxies, an evolution simulator, a 3D black hole, chaos, flocking, falling sand, electric fields and fluids.
 
 All simulations are free, run entirely in the browser (desktop and mobile), and need no account or install. Each page has a live simulation, usage instructions, an explanation of the physics and an FAQ.
 
@@ -8,6 +8,8 @@ All simulations are free, run entirely in the browser (desktop and mobile), and 
 
 Newton's law of gravitation, from a single star to thousands of interacting bodies.
 
+- [Gravity Slingshot](https://labs.stacklor.com/slingshot/): Free gravity puzzle game in your browser. Drag to launch a probe, use planets, moons and black holes for gravity assists, and reach the target in as few launches as possible. 15 levels plus a daily puzzle.
+- [Galaxy Collider](https://labs.stacklor.com/galaxy/): Interactive 3D galaxy collision simulation. Collide two spiral galaxies, tune mass, tilt and spin, and watch tidal tails, bridges and a final merger unfold over billions of years. Share your collision with a link.
 - [Gravity Engine](https://labs.stacklor.com/gravity/): Free online gravity simulator. Drag to stream particles toward a central star and watch Newtonian gravity bend them into elliptical orbits, slingshots and escapes in real time.
 - [3D Black Hole](https://labs.stacklor.com/blackhole/): Interactive 3D black hole simulation in WebGL. Orbit a glowing accretion disk of 10,000 particles and see gravitational lensing, Doppler beaming and matter crossing the event horizon.
 - [N-Particle Sandbox](https://labs.stacklor.com/nparticle/): Interactive 3D N-body gravity simulation in your browser. Spawn particles or bursts, tune mass and time dilation, and watch clusters, binaries and orbits emerge from pairwise O(N²) forces.
@@ -24,6 +26,7 @@ Deterministic systems where a tiny change in the start produces a completely dif
 
 Simple local rules that add up to complex group behaviour nobody programmed directly.
 
+- [Evolution Lab](https://labs.stacklor.com/evolution/): Interactive evolution simulator. Creatures with mutating genes for speed, size and sense compete for food while predators hunt them. Watch natural selection, population cycles and evolutionary arms races in real time.
 - [Boids Flocking](https://labs.stacklor.com/boids/): Interactive boids flocking simulation based on Craig Reynolds' algorithm. Tune separation, alignment and cohesion, add a predator and watch emergent swarm behaviour appear.
 - [Falling Sand](https://labs.stacklor.com/sand/): Free falling sand game in your browser. Paint with sand, water, fire and stone and watch cellular automata rules make piles, pools and flames pixel by pixel.
 
@@ -35,6 +38,36 @@ Continuous quantities — electric potential, pressure, velocity — computed in
 - [Fluid SPH](https://labs.stacklor.com/fluid/): Real-time 2D fluid simulation using smoothed particle hydrodynamics. Pour water, change gravity and viscosity, and watch pressure and flow in your browser.
 
 ## Details
+
+### Gravity Slingshot
+
+Gravity Slingshot is a physics puzzle game built on Newton's law of gravitation. Your probe is pulled by every planet, star and black hole on screen, so the straight line is rarely the right shot. You win by bending the path — the same gravity-assist technique NASA used to send Voyager past Jupiter and Saturn. Every level is deterministic and proven solvable, and the daily puzzle is the same for every player.
+
+Concepts: Gravity assist, Newton's law of universal gravitation, Orbital trajectories, Velocity Verlet integration.
+
+Q: What is a gravity assist?
+A: A gravity assist (or slingshot) uses a planet's gravity to change a spacecraft's speed and direction without using fuel. Voyager 2 used gravity assists at Jupiter, Saturn and Uranus to reach Neptune.
+
+Q: Is every level solvable?
+A: Yes. Each level, and each day's daily puzzle, is checked by a solver that simulates thousands of launch angles and strengths and only accepts levels where some shots reach the target.
+
+Q: Why doesn't the probe go straight?
+A: Every body pulls on the probe with a force that grows as it gets closer (inverse-square law), so its path curves toward planets, stars and especially black holes.
+
+### Galaxy Collider
+
+Galaxy Collider recreates the classic Toomre & Toomre (1972) experiment: each galaxy is a massive core surrounded by a disk of stars, and the two cores fall toward each other. Stars feel both cores, so during a close pass they are flung into long tidal tails and bridges like those seen in the Antennae and Mice galaxies. An approximate dynamical-friction term drains orbital energy so the cores eventually merge into one galaxy — a likely, though not certain, fate for the Milky Way and Andromeda over the next several billion years.
+
+Concepts: Galaxy mergers, Tidal tails, Restricted N-body simulation, Dynamical friction, Retrograde vs prograde encounters.
+
+Q: Will the Milky Way collide with Andromeda?
+A: Andromeda is approaching at about 110 km/s. Current estimates give roughly even odds of a merger within the next 5–10 billion years. Stars almost never hit each other; the galaxies' shapes are rearranged by gravity.
+
+Q: What causes tidal tails?
+A: During a close pass, stars on the near side of a disk are pulled harder than the core and stars on the far side are pulled less. That stretch flings stars out into long, curved tails. Disks spinning in the same direction as the encounter (prograde) form the strongest tails.
+
+Q: How accurate is this simulation?
+A: It follows the Toomre & Toomre approach: stars are test particles moving under the gravity of two cores, which is enough to reproduce tails and bridges. Full research simulations also model dark matter halos, gas and star formation.
 
 ### Gravity Engine
 
@@ -119,6 +152,21 @@ A: Near the boundaries between magnets, the pendulum passes close to several of 
 
 Q: What is a basin of attraction?
 A: The set of all starting positions that end up at the same resting state — here, the same magnet. Each colour in the map is one basin; their tangled boundary is a fractal.
+
+### Evolution Lab
+
+Evolution Lab is an agent-based model of natural selection. Each creature has three genes — speed, size and sense range — and every gene has a cost: moving fast and being big burn energy, and sensing far drains a little more. Creatures that gather enough food reproduce, passing on slightly mutated genes. When predators arrive, prey that are faster or bigger than the predators survive more often, and the average genome shifts. No outcome is scripted: some runs evolve small, fast prey; others evolve large, armoured ones.
+
+Concepts: Natural selection, Mutation and heredity, Predator–prey dynamics, Evolutionary arms race, Agent-based modelling.
+
+Q: How does natural selection work in this simulation?
+A: Creatures that find food and avoid predators live long enough to reproduce. Their children inherit their genes with small random mutations. Over generations, genes that help survival in the current environment become more common.
+
+Q: Why do predator and prey numbers rise and fall in cycles?
+A: More prey feed more predators; more predators eat down the prey; then predators starve and prey recover. These are the cycles described by the Lotka–Volterra equations, here emerging from individual behaviour.
+
+Q: Why does every run end differently?
+A: Mutations are random, so different runs discover different strategies — for example small and fast prey that outrun predators, or large prey that predators can't swallow.
 
 ### Boids Flocking
 
