@@ -7,7 +7,8 @@ export default function CanvasSimulation({
     initSimulation, 
     updateSimulation, 
     drawSimulation, 
-    onResize 
+    onResize,
+    background = 'rgb(20,20,20)',
 }) {
     const canvasRef = useRef(null);
     const engineRef = useRef(null);
@@ -30,7 +31,7 @@ export default function CanvasSimulation({
         handleResize(); // Initial sizing
 
         // Initialize Engine
-        const engine = new SimulationEngine(ctx, { backgroundColor: 'rgb(20,20,20)' });
+        const engine = new SimulationEngine(ctx, { backgroundColor: background });
         engineRef.current = engine;
         
         if (initSimulation) {

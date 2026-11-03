@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import CanvasSimulation from "@/components/CanvasSimulation";
 import ScienceModal from "@/components/ScienceModal";
 import SimShell from "@/components/SimShell";
+import StoryToasts from "@/components/StoryToasts";
+import { useToasts } from "@/shared/useToasts";
 import { ActionButton, Group, Icons, Segmented, Slider, Switch } from "@/components/controls";
 
 // ── RK4 integrator ─────────────────────────────────────────────────────────
@@ -29,6 +31,9 @@ const ATTRACTORS = {
         dt: 0.005,
         scale: 8,
         cx: 0, cy: 12,     // offset so the butterfly is centred
+        diverge: 15,
+        view: (x, y, z) => [x, z - 25, y],   // classic x–z butterfly
+        extent: 27,
     },
     rossler: {
         label: 'Rössler',
@@ -39,6 +44,9 @@ const ATTRACTORS = {
         dt: 0.01,
         scale: 14,
         cx: 0, cy: 0,
+        diverge: 8,
+        view: (x, y, z) => [x, z * 0.7 - 6, y],
+        extent: 13,
     },
     thomas: {
         label: 'Thomas',
@@ -49,6 +57,9 @@ const ATTRACTORS = {
         dt: 0.05,
         scale: 55,
         cx: 0, cy: 0,
+        diverge: 2,
+        view: (x, y, z) => [x, y, z],
+        extent: 4.6,
     },
 };
 
@@ -59,96 +70,147 @@ export default function AttractorPage() {
     const [autoRotate, setAutoRotate]         = useState(true);
     const [showScience, setShowScience]       = useState(false);
 
-    const stateRef = useRef(null);
-    if (!stateRef.current) {
-        stateRef.current = {
-            trail: [],
-            x: 0.1, y: 0, z: 0,
+    const [butterfly, setButterfly] = useState(true);
+    const { items: toastItems, push: pushToast, clear: clearToasts } = useToasts({ max: 2, ttl: 6500 });
+
+    // Mutable simulation state shared with the render loop (held in state, mutated in place)
+    const sRef = useRef({
+            tracers: [],
+            ghost: { key: null, pts: [] },
             angle: 0,
             attractorKey: 'lorenz',
             trailLength: 2000,
             speed: 3,
             autoRotate: true,
-            frames: 0,
-            lastTime: performance.now(),
-        };
-    }
-    const s = stateRef.current;
+            butterfly: true,
+            diverged: false,
+            steps: 0,
+    });
 
-    // Keep mutable refs in sync with React state
-    s.attractorKey  = attractorKey;
-    s.trailLength   = trailLength;
-    s.speed         = speed;
-    s.autoRotate    = autoRotate;
+    // Keep the loop's copy of the settings in sync with React state
+    useEffect(() => {
+        Object.assign(sRef.current, { attractorKey, trailLength, speed, autoRotate, butterfly });
+    }, [attractorKey, trailLength, speed, autoRotate, butterfly]);
 
-    const resetAttractor = (key) => {
+    const TRACER_COLORS = ['#ffffff', '#38bdf8', '#f472b6'];
+
+    // The full shape, integrated once per attractor and drawn faintly behind the live paths
+    const buildGhost = (key) => {
+        const s = sRef.current;
         const a = ATTRACTORS[key];
-        s.trail = [];
-        [s.x, s.y, s.z] = [...a.init];
-        s.angle = 0;
+        let [x, y, z] = a.init;
+        for (let i = 0; i < 1500; i++) [x, y, z] = rk4(x, y, z, a.dt, a.deriv); // skip the transient
+        const pts = [];
+        for (let i = 0; i < 14000; i++) { [x, y, z] = rk4(x, y, z, a.dt, a.deriv); pts.push([x, y, z]); }
+        s.ghost = { key, pts };
     };
 
-    const init = (engine, width, height) => { resetAttractor('lorenz'); };
+    const resetAttractor = (key) => {
+        const s = sRef.current;
+        const a = ATTRACTORS[key];
+        // Three starts 0.001 apart: sensitive dependence on initial conditions, made visible
+        s.tracers = [0, 1, 2].map((k) => ({ x: a.init[0] + k * 0.001, y: a.init[1], z: a.init[2], trail: [] }));
+        s.angle = 0;
+        s.diverged = false;
+        s.steps = 0;
+        if (s.ghost.key !== key) buildGhost(key);
+        clearToasts();
+    };
 
-    const update = (dt, engine) => {
+    const init = () => { resetAttractor('lorenz'); };
+
+    const update = () => {
+        const s = sRef.current;
         const a = ATTRACTORS[s.attractorKey];
-        // Step the ODE several times per frame for speed
+        if (s.ghost.key !== s.attractorKey) buildGhost(s.attractorKey);
+        const live = s.butterfly ? s.tracers : s.tracers.slice(0, 1);
         for (let i = 0; i < s.speed * 5; i++) {
-            const [nx, ny, nz] = rk4(s.x, s.y, s.z, a.dt, a.deriv);
-            s.x = nx; s.y = ny; s.z = nz;
-            s.trail.push([nx, ny, nz]);
+            s.steps++;
+            for (const t of live) {
+                const nx = rk4(t.x, t.y, t.z, a.dt, a.deriv);
+                t.x = nx[0]; t.y = nx[1]; t.z = nx[2];
+                t.trail.push([t.x, t.y, t.z]);
+            }
         }
-        if (s.trail.length > s.trailLength) {
-            s.trail.splice(0, s.trail.length - s.trailLength);
-        }
+        for (const t of s.tracers) if (t.trail.length > s.trailLength) t.trail.splice(0, t.trail.length - s.trailLength);
         if (s.autoRotate) s.angle += 0.004;
+
+        // Announce the butterfly effect once the paths have separated
+        if (s.butterfly && !s.diverged && s.tracers.length === 3) {
+            const [p, q] = [s.tracers[0], s.tracers[1]];
+            const d = Math.hypot(p.x - q.x, p.y - q.y, p.z - q.z);
+            if (d > a.diverge) {
+                s.diverged = true;
+                const secs = (s.steps * a.dt).toFixed(1);
+                pushToast(`The three paths started 0.001 apart. After ${secs} time units they are on opposite sides of the attractor — the butterfly effect.`);
+            }
+        }
     };
 
     const draw = (ctx, engine, width, height) => {
-        ctx.fillStyle = 'rgba(0,0,0,0.18)';
+        const s = sRef.current;
+        ctx.fillStyle = '#05060a';
         ctx.fillRect(0, 0, width, height);
 
         const a    = ATTRACTORS[s.attractorKey];
-        const cx   = width / 2 + a.cx * a.scale;
-        const cy   = height / 2 - a.cy * a.scale;
+        // Fit to the area the controls don't cover
+        const visW = window.innerWidth >= 1024 ? width - 340 : width;
+        const visH = (window.innerWidth < 768 ? height - 140 : height) - 64;
+        const sc   = (0.42 * Math.min(visW, visH)) / a.extent;
+        const cx   = visW / 2;
+        const cy   = visH / 2;
         const cos  = Math.cos(s.angle);
         const sin  = Math.sin(s.angle);
-        const len  = s.trail.length;
-        if (len < 2) return;
 
-        // Perspective project: rotate around Y, then project to 2D
-        const project = ([px, py, pz]) => {
+        const project = (x, y, z) => {
+            const [px, py, pz] = a.view(x, y, z);
             const rx = px * cos - pz * sin;
             const rz = px * sin + pz * cos;
-            const persp = 600 / (600 + rz);
-            return [cx + rx * a.scale * persp, cy - py * a.scale * persp];
+            const persp = 600 / (600 + rz * sc * 0.6);
+            return [cx + rx * sc * persp, cy - py * sc * persp];
         };
 
-        ctx.lineWidth = 1.5;
-        ctx.lineCap = 'round';
-
-        for (let i = 1; i < len; i++) {
-            const t    = i / len;
-            const alpha = t * 0.85 + 0.05;
-            const base = a.color;
-            ctx.strokeStyle = base + Math.floor(alpha * 255).toString(16).padStart(2,'0');
-            const [x0, y0] = project(s.trail[i-1]);
-            const [x1, y1] = project(s.trail[i]);
+        // Ghost of the whole attractor
+        const g = s.ghost.pts;
+        if (g.length) {
+            ctx.strokeStyle = a.color + '2e';
+            ctx.lineWidth = 1;
             ctx.beginPath();
+            let [x0, y0] = project(...g[0]);
             ctx.moveTo(x0, y0);
-            ctx.lineTo(x1, y1);
+            for (let i = 1; i < g.length; i++) { const [x1, y1] = project(...g[i]); ctx.lineTo(x1, y1); }
             ctx.stroke();
         }
 
-        // Glow dot at head
-        const [hx, hy] = project(s.trail[len-1]);
-        const grd = ctx.createRadialGradient(hx, hy, 0, hx, hy, 10);
-        grd.addColorStop(0, a.color + 'ff');
-        grd.addColorStop(1, a.color + '00');
-        ctx.fillStyle = grd;
-        ctx.beginPath();
-        ctx.arc(hx, hy, 10, 0, Math.PI*2);
-        ctx.fill();
+        // Live paths, fading toward the tail (drawn in a few alpha buckets)
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        const live = s.butterfly ? s.tracers : s.tracers.slice(0, 1);
+        live.forEach((t, ti) => {
+            const len = t.trail.length;
+            if (len < 2) return;
+            const color = s.butterfly ? TRACER_COLORS[ti] : a.color;
+            const buckets = 8;
+            ctx.lineWidth = 1.8;
+            for (let bk = 0; bk < buckets; bk++) {
+                const start = Math.floor((bk / buckets) * (len - 1));
+                const end = Math.floor(((bk + 1) / buckets) * (len - 1));
+                ctx.strokeStyle = color + Math.floor((0.12 + 0.88 * ((bk + 1) / buckets)) * 255).toString(16).padStart(2, '0');
+                ctx.beginPath();
+                const [sx, sy] = project(...t.trail[start]);
+                ctx.moveTo(sx, sy);
+                for (let i = start + 1; i <= end; i++) { const [x1, y1] = project(...t.trail[i]); ctx.lineTo(x1, y1); }
+                ctx.stroke();
+            }
+            const [hx, hy] = project(...t.trail[len - 1]);
+            const grd = ctx.createRadialGradient(hx, hy, 0, hx, hy, 12);
+            grd.addColorStop(0, color + 'ff');
+            grd.addColorStop(1, color + '00');
+            ctx.fillStyle = grd;
+            ctx.beginPath();
+            ctx.arc(hx, hy, 12, 0, Math.PI * 2);
+            ctx.fill();
+        });
     };
 
     const switchAttractor = (key) => {
@@ -172,9 +234,10 @@ export default function AttractorPage() {
                         <Slider label="Speed" value={speed} min={1} max={8} step={1} onChange={setSpeed} format={(v) => `${v}×`} />
                     </Group>
                     <Group label="View">
+                        <Switch label="Butterfly effect" description="Three paths that start 0.001 apart" checked={butterfly} onChange={(v) => { setButterfly(v); resetAttractor(attractorKey); }} />
                         <Switch label="Auto-rotate" checked={autoRotate} onChange={setAutoRotate} />
                     </Group>
-                    <ActionButton icon={Icons.reset} onClick={() => resetAttractor(attractorKey)}>Reset trail</ActionButton>
+                    <ActionButton icon={Icons.reset} onClick={() => resetAttractor(attractorKey)}>Restart paths</ActionButton>
                 </>
             }
         >
@@ -182,7 +245,9 @@ export default function AttractorPage() {
                 initSimulation={init}
                 updateSimulation={update}
                 drawSimulation={draw}
+                background="#05060a"
             />
+            <StoryToasts items={toastItems} />
             {showScience && (
                 <ScienceModal
                     title="Strange Attractors — Chaos Theory"

@@ -38,7 +38,7 @@ export default function NParticleSimulationPage() {
         showCrosshair: false,
         lastFpsTime: performance.now(),
         framesThisSecond: 0,
-        COLORS: ['rgb(255, 0, 0)', 'rgb(0, 255, 0)', 'rgb(0, 0, 255)'],
+        COLORS: ['#34d399', '#22d3ee', '#a78bfa', '#fbbf24', '#f472b6'],
         settingsRef: null // Will hold latest settings
     });
 
@@ -325,6 +325,32 @@ export default function NParticleSimulationPage() {
         };
         canvas.addEventListener('touchend', endTouch);
         canvas.addEventListener('touchcancel', endTouch);
+
+        // Opening scene: a slowly rotating, tilted disk that collapses into clusters
+        if (!s.current.particles.length) {
+            const N = window.innerWidth < 768 ? 240 : 340;
+            const R = 520;
+            const tilt = 1.05;
+            const cx = w / 2, cy = h / 2, cz = 1000;
+            for (let i = 0; i < N; i++) {
+                const r = 40 + Math.sqrt(Math.random()) * R;
+                const a = Math.random() * Math.PI * 2;
+                const radius = 4 + Math.random() * 9;
+                // position in the disk plane, then tilt about the x axis
+                const lx = Math.cos(a) * r, ly = (Math.random() - 0.5) * 30, lz = Math.sin(a) * r;
+                const y = ly * Math.cos(tilt) - lz * Math.sin(tilt);
+                const z = ly * Math.sin(tilt) + lz * Math.cos(tilt);
+                const p = new Particle3D(cx + lx, cy + y, cz + z, radius);
+                // sub-orbital tangential speed → swirl inward and clump
+                const enclosed = N * (r / R) ** 2;
+                const v = 0.85 * Math.sqrt((s.current.G * s.current.M * enclosed) / r);
+                const tx = -Math.sin(a) * v, tzl = Math.cos(a) * v;
+                p.mx = p.mass * tx;
+                p.my = p.mass * (-tzl * Math.sin(tilt));
+                p.mz = p.mass * (tzl * Math.cos(tilt));
+                s.current.particles.push(p);
+            }
+        }
     };
 
     const update = (dt, engine) => {
@@ -392,8 +418,28 @@ export default function NParticleSimulationPage() {
         c.particles.sort((a, b) => b.distToCam - a.distToCam);
     };
 
+    const sprites = useRef({});
+    const spriteFor = (color) => {
+        let sp = sprites.current[color];
+        if (!sp) {
+            sp = document.createElement('canvas');
+            sp.width = sp.height = 64;
+            const g = sp.getContext('2d');
+            const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+            grad.addColorStop(0, '#ffffff');
+            grad.addColorStop(0.18, color);
+            grad.addColorStop(0.42, color + '66');
+            grad.addColorStop(1, color + '00');
+            g.fillStyle = grad;
+            g.fillRect(0, 0, 64, 64);
+            sprites.current[color] = sp;
+        }
+        return sp;
+    };
+
     const draw = (ctx, engine, width, height) => {
         const c = s.current;
+        ctx.globalCompositeOperation = 'lighter';
         for (let i = 0; i < c.particles.length; i++) {
             let p = c.particles[i];
             let dx = p.x - c.cam.x, dy = p.y - c.cam.y, dz = p.z - c.cam.z;
@@ -411,12 +457,11 @@ export default function NParticleSimulationPage() {
             let drawnX = width / 2 + projX * scale;
             let drawnY = height / 2 + projY * scale;
 
-            ctx.globalAlpha = Math.max(0.1, Math.min(1.0, 1.2 - (depth / 3000))); 
-            ctx.beginPath();
-            ctx.arc(drawnX, drawnY, Math.max(drawnRadius, 1), 0, Math.PI * 2);
-            ctx.fillStyle = p.color;
-            ctx.fill();
+            ctx.globalAlpha = Math.max(0.15, Math.min(1.0, 1.3 - (depth / 3000)));
+            const size = Math.max(drawnRadius, 1.2) * 3.2;
+            ctx.drawImage(spriteFor(p.color), drawnX - size / 2, drawnY - size / 2, size, size);
         }
+        ctx.globalCompositeOperation = 'source-over';
 
         // Draw Crosshair Indicator 
         if (c.showCrosshair) {
@@ -506,6 +551,7 @@ export default function NParticleSimulationPage() {
                 initSimulation={init}
                 updateSimulation={update}
                 drawSimulation={draw}
+                background="#04060b"
             />
             {showScience && (
                 <ScienceModal
