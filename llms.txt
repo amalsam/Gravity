@@ -10,7 +10,7 @@ Newton's law of gravitation, from a single star to thousands of interacting bodi
 
 - [Gravity Slingshot](https://labs.stacklor.com/slingshot/): Free gravity puzzle game in your browser. Drag to launch a probe, use planets, moons and black holes for gravity assists, and reach the target in as few launches as possible. 15 levels plus a daily puzzle.
 - [Galaxy Collider](https://labs.stacklor.com/galaxy/): Interactive 3D galaxy collision simulation. Collide two spiral galaxies, tune mass, tilt and spin, and watch tidal tails, bridges and a final merger unfold over billions of years. Share your collision with a link.
-- [Gravity Engine](https://labs.stacklor.com/gravity/): Free online gravity simulator. Drag to stream particles toward a central star and watch Newtonian gravity bend them into elliptical orbits, slingshots and escapes in real time.
+- [Gravity Engine](https://labs.stacklor.com/gravity/): Free online gravity simulator. Drag to stream glowing particles toward a star and watch 2D gravity bend them into rosette orbits, rings and slingshots in real time.
 - [3D Black Hole](https://labs.stacklor.com/blackhole/): Interactive 3D black hole simulation in WebGL. Orbit a glowing accretion disk of 10,000 particles and see gravitational lensing, Doppler beaming and matter crossing the event horizon.
 - [N-Particle Sandbox](https://labs.stacklor.com/nparticle/): Interactive 3D N-body gravity simulation in your browser. Spawn particles or bursts, tune mass and time dilation, and watch clusters, binaries and orbits emerge from pairwise O(N²) forces.
 - [Solar System](https://labs.stacklor.com/solar/): Interactive solar system simulator with all eight planets on real orbital data. Speed up time, follow any planet and see Kepler's laws of planetary motion in action.
@@ -19,7 +19,7 @@ Newton's law of gravitation, from a single star to thousands of interacting bodi
 
 Deterministic systems where a tiny change in the start produces a completely different future.
 
-- [Strange Attractors](https://labs.stacklor.com/attractor/): Interactive Lorenz, Rössler and Thomas strange attractor simulation. Watch chaos theory unfold as RK4 integration traces glowing 3D trails that slowly rotate as they draw.
+- [Strange Attractors](https://labs.stacklor.com/attractor/): Interactive Lorenz, Rössler and Thomas strange attractor simulation. Watch three paths that start 0.001 apart diverge across the attractor — the butterfly effect — traced with RK4 integration in rotating 3D.
 - [Magnetic Pendulum](https://labs.stacklor.com/pendulum/): Interactive magnetic pendulum chaos simulation. A damped pendulum swings above magnets; the map shows which one it settles on from every starting point, revealing a fractal basin of attraction.
 
 ## Emergence
@@ -28,14 +28,14 @@ Simple local rules that add up to complex group behaviour nobody programmed dire
 
 - [Evolution Lab](https://labs.stacklor.com/evolution/): Interactive evolution simulator. Creatures with mutating genes for speed, size and sense compete for food while predators hunt them. Watch natural selection, population cycles and evolutionary arms races in real time.
 - [Boids Flocking](https://labs.stacklor.com/boids/): Interactive boids flocking simulation based on Craig Reynolds' algorithm. Tune separation, alignment and cohesion, add a predator and watch emergent swarm behaviour appear.
-- [Falling Sand](https://labs.stacklor.com/sand/): Free falling sand game in your browser. Paint with sand, water, fire and stone and watch cellular automata rules make piles, pools and flames pixel by pixel.
+- [Falling Sand](https://labs.stacklor.com/sand/): Free falling sand game in your browser. Paint with sand, water, wood, fire and stone: sand piles up, water flows, fire spreads through wood and boils water into steam — all from simple cellular automata rules.
 
 ## Fields & fluids
 
 Continuous quantities — electric potential, pressure, velocity — computed in real time.
 
-- [Electric Field](https://labs.stacklor.com/efield/): Interactive electric field simulator. Place positive and negative charges and watch Coulomb field lines and equipotential lines update in real time.
-- [Fluid SPH](https://labs.stacklor.com/fluid/): Real-time 2D fluid simulation using smoothed particle hydrodynamics. Pour water, change gravity and viscosity, and watch pressure and flow in your browser.
+- [Electric Field](https://labs.stacklor.com/efield/): Interactive electric field simulator. Drag positive and negative charges and watch Coulomb field lines, a glowing potential map and streams of test charges reshape in real time. Includes dipole, quadrupole and capacitor presets.
+- [Fluid SPH](https://labs.stacklor.com/fluid/): Real-time 2D water simulation in your browser. Break a dam, stir the fluid, pour more in and flip gravity to watch particle-based hydrodynamics splash, slosh and settle. Tune viscosity from water to honey.
 
 ## Details
 
@@ -71,15 +71,18 @@ A: It follows the Toomre & Toomre approach: stars are test particles moving unde
 
 ### Gravity Engine
 
-A 2D gravity simulator built on Newton's law of universal gravitation. Every particle is pulled toward a central star with a force proportional to the star's mass, and its velocity and position are updated each frame with semi-implicit Euler integration. Depending on how fast and where you spawn particles, they fall in, settle into elliptical orbits or escape.
+A gravity simulator set in a two-dimensional universe. In 2D, gravity weakens as 1/r rather than the familiar 1/r², which has two striking consequences you can see on screen: every circular orbit has the same speed, whatever its size, and orbits that aren't circular precess into flower-like rosettes instead of closing into ellipses. Particles are coloured by speed relative to orbital speed, so you can watch them fall inward (blue), circle (white) or swing outward (amber).
 
-Concepts: Newton's law of universal gravitation, Orbital velocity, Escape velocity, Euler integration.
+Concepts: Gravity in two dimensions, Circular orbital speed, Orbital precession, Bertrand's theorem, Euler integration.
 
-Q: How does this gravity simulator work?
-A: Each particle feels a gravitational pull toward the central star, F = G·M·m / r². Every frame the simulation turns that force into acceleration, updates the particle's velocity, then its position (semi-implicit Euler integration). Repeating this 60 times a second produces orbits.
+Q: Why does gravity follow 1/r in this simulation?
+A: The simulation is set in a flat 2D world. Gravity's pull spreads around a circle instead of over a sphere, so it weakens as 1/r rather than 1/r². It is the honest 2D version of Newton's law.
 
-Q: Why do some particles orbit and others escape?
-A: A particle that moves at roughly the circular orbital speed √(GM/r) for its distance settles into an orbit. Slower particles spiral inward; particles faster than escape velocity √(2GM/r) fly off and never return.
+Q: Why do the orbits look like flowers?
+A: Only the 1/r² and spring force laws produce orbits that close on themselves (Bertrand's theorem). Under 1/r gravity the closest point of a non-circular orbit advances every lap, tracing a rosette.
+
+Q: What do the colours mean?
+A: Colour shows speed compared with circular-orbit speed: white is orbital, blue is slower (falling inward) and amber is faster (swinging outward).
 
 Q: Do I need to install anything?
 A: No. The simulator runs entirely in your browser on desktop or mobile, with no download or sign-up.
@@ -206,7 +209,7 @@ A: The electric field has exactly one direction at each point. If two lines cros
 
 ### Fluid SPH
 
-Smoothed particle hydrodynamics (SPH) models a fluid as many particles that each carry mass. A smoothing kernel turns nearby particles into a continuous density; density gives pressure, pressure gives force, and viscosity smooths out velocity differences. The result is water that splashes, settles and sloshes in real time.
+A real-time 2D fluid built from particles, in the family of Smoothed Particle Hydrodynamics (SPH). Each particle measures how crowded its neighbourhood is; crowded regions push particles apart and sparse ones pull them together, which produces pressure, splashes and a cohesive surface. The solver uses double density relaxation (Clavet et al., 2005), which moves particles directly to relieve pressure and so stays stable at real-time step sizes.
 
 Concepts: Smoothed particle hydrodynamics, Smoothing kernel, Pressure and viscosity, Lagrangian fluid simulation.
 
