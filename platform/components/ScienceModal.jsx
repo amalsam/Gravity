@@ -1,68 +1,107 @@
 "use client";
-import { useEffect } from "react";
 
-export default function ScienceModal({ title, accentClass, sections, onClose }) {
-    // Close on ESC
+import { useEffect, useId, useRef } from "react";
+
+// Explains the physics behind a simulation. Phones: a bottom sheet.
+// Desktop: a centred dialog (modals stay centred — not origin-aware).
+// `accentClass` is accepted for backwards compatibility; colour comes from --accent.
+export default function ScienceModal({ title, sections, onClose }) {
+    const titleId = useId();
+    const dialogRef = useRef(null);
+    const closeRef = useRef(null);
+
     useEffect(() => {
-        const handler = (e) => { if (e.key === "Escape") onClose(); };
-        window.addEventListener("keydown", handler);
-        return () => window.removeEventListener("keydown", handler);
+        const previouslyFocused = document.activeElement;
+        closeRef.current?.focus();
+
+        const onKey = (e) => {
+            if (e.key === "Escape") {
+                e.stopPropagation();
+                onClose();
+                return;
+            }
+            // Keep Tab focus inside the dialog
+            if (e.key === "Tab" && dialogRef.current) {
+                const focusables = dialogRef.current.querySelectorAll(
+                    'button, [href], input, [tabindex]:not([tabindex="-1"])'
+                );
+                if (!focusables.length) return;
+                const first = focusables[0];
+                const last = focusables[focusables.length - 1];
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            }
+        };
+        window.addEventListener("keydown", onKey);
+        return () => {
+            window.removeEventListener("keydown", onKey);
+            previouslyFocused?.focus?.();
+        };
     }, [onClose]);
 
     return (
         <div
-            className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4"
+            className="scrim-in fixed inset-0 z-[100] flex items-end justify-center bg-black/70 md:items-center md:p-6"
             onClick={onClose}
         >
             <div
-                className="relative w-full md:max-w-2xl bg-[#0d0d0d] border border-white/10 rounded-t-3xl md:rounded-2xl shadow-2xl max-h-[88vh] overflow-hidden flex flex-col"
+                ref={dialogRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={titleId}
+                className="dialog-in relative flex select-text max-h-[88dvh] w-full flex-col overflow-hidden rounded-t-[22px] border border-line bg-[var(--panel-solid)] shadow-2xl md:max-w-2xl md:rounded-[20px]"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Header */}
-                <div className={`flex items-center justify-between px-5 pt-5 pb-4 border-b border-white/10`}>
+                <header className="flex items-start justify-between gap-4 border-b border-line px-5 pb-4 pt-5 md:px-6">
                     <div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold tracking-widest text-gray-500 uppercase">Science</span>
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-bold ${accentClass}`}>Physics</span>
-                        </div>
-                        <h2 className="text-xl font-extrabold text-white mt-0.5">{title}</h2>
+                        <p className="eyebrow flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full bg-[var(--accent)]" aria-hidden="true" />
+                            The science
+                        </p>
+                        <h2 id={titleId} className="heading mt-1.5 text-xl text-ink md:text-2xl">
+                            {title}
+                        </h2>
                     </div>
                     <button
+                        ref={closeRef}
+                        type="button"
                         onClick={onClose}
-                        className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/15 transition-all"
+                        className="pressable nav-link flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-fill text-ink-2"
                         aria-label="Close"
                     >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/>
+                        <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true">
+                            <path d="M4 4l8 8M12 4l-8 8" />
                         </svg>
                     </button>
-                </div>
+                </header>
 
-                {/* Scrollable body */}
-                <div className="overflow-y-auto px-5 py-4 space-y-6 custom-scrollbar">
+                <div className="sheet-scroll custom-scrollbar space-y-7 overflow-y-auto px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-5 md:px-6">
                     {sections.map((sec, i) => (
                         <section key={i}>
-                            <h3 className="text-sm font-bold text-white mb-1.5 tracking-wide">{sec.heading}</h3>
-                            {sec.text && <p className="text-[13px] text-gray-400 leading-relaxed">{sec.text}</p>}
+                            <h3 className="text-[15px] font-semibold text-ink">{sec.heading}</h3>
+                            {sec.text && <p className="prose-lab mt-1.5 text-[15px]">{sec.text}</p>}
                             {sec.equations && (
-                                <div className="mt-3 space-y-2">
+                                <dl className="mt-3 divide-y divide-[var(--line)] overflow-hidden rounded-xl border border-line bg-fill">
                                     {sec.equations.map((eq, j) => (
-                                        <div key={j} className="flex items-start gap-3 bg-white/5 border border-white/8 rounded-xl px-3 py-2.5 font-mono text-sm">
-                                            <span className="text-gray-600 text-[10px] font-bold pt-0.5 shrink-0 tracking-wider">{eq.label}</span>
-                                            <code className="text-emerald-300 text-[13px] leading-snug">{eq.value}</code>
+                                        <div key={j} className="flex flex-col gap-0.5 px-3.5 py-2.5 sm:flex-row sm:items-baseline sm:gap-4">
+                                            <dt className="shrink-0 text-[12px] text-ink-3 sm:w-28">{eq.label}</dt>
+                                            <dd className="font-mono text-[14px] leading-snug text-ink">{eq.value}</dd>
                                         </div>
                                     ))}
-                                </div>
+                                </dl>
                             )}
                             {sec.code && (
-                                <pre className="mt-3 bg-black border border-white/10 rounded-xl p-3 text-[11px] md:text-xs text-emerald-300 overflow-x-auto leading-relaxed custom-scrollbar">
+                                <pre className="custom-scrollbar mt-3 overflow-x-auto rounded-xl border border-line bg-black p-3.5 text-[12.5px] leading-relaxed text-ink-2">
                                     <code>{sec.code}</code>
                                 </pre>
                             )}
                         </section>
                     ))}
-                    {/* SEO-friendly hidden text */}
-                    <div className="pb-2" />
                 </div>
             </div>
         </div>
