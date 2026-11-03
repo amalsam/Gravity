@@ -108,7 +108,10 @@ export default function Navbar() {
                               }`}
                             >
                               <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: s.accent }} aria-hidden="true" />
-                              <span className="flex-1">{s.name}</span>
+                              <span className="flex-1">
+                                {s.name}
+                                {s.isNew && <span className="ml-2 text-[11px] font-medium" style={{ color: s.accent }}>New</span>}
+                              </span>
                               <span className="font-mono text-[12px] text-ink-3">{s.tech}</span>
                             </Link>
                           </li>

@@ -27,6 +27,80 @@ export const categories = [
 
 export const simulations = [
   {
+    slug: "slingshot",
+    name: "Gravity Slingshot",
+    short: "Slingshot",
+    category: "gravity",
+    accent: "#a3e635",
+    tech: "2D Game",
+    isNew: true,
+    tagline: "A puzzle game: bend your probe's path around planets to hit the target.",
+    title: "Gravity Slingshot – Orbit Puzzle Game with Real Physics",
+    description:
+      "Free gravity puzzle game in your browser. Drag to launch a probe, use planets, moons and black holes for gravity assists, and reach the target in as few launches as possible. 15 levels plus a daily puzzle.",
+    summary:
+      "Gravity Slingshot is a physics puzzle game built on Newton's law of gravitation. Your probe is pulled by every planet, star and black hole on screen, so the straight line is rarely the right shot. You win by bending the path — the same gravity-assist technique NASA used to send Voyager past Jupiter and Saturn. Every level is deterministic and proven solvable, and the daily puzzle is the same for every player.",
+    keywords: ["gravity game", "orbit puzzle game", "gravity assist simulator", "physics puzzle game", "slingshot game"],
+    howTo: [
+      "Drag backwards from anywhere on the canvas and release to launch the probe — the further you pull, the faster it goes.",
+      "Watch the dotted preview: it shows where gravity will bend your path for the first moments of flight.",
+      "Reach the glowing ring. One launch earns three stars, two launches earn two, more earn one.",
+      "Clear a level to unlock the next, or try the daily puzzle — the same for everyone each day.",
+    ],
+    concepts: ["Gravity assist", "Newton's law of universal gravitation", "Orbital trajectories", "Velocity Verlet integration"],
+    faq: [
+      {
+        q: "What is a gravity assist?",
+        a: "A gravity assist (or slingshot) uses a planet's gravity to change a spacecraft's speed and direction without using fuel. Voyager 2 used gravity assists at Jupiter, Saturn and Uranus to reach Neptune.",
+      },
+      {
+        q: "Is every level solvable?",
+        a: "Yes. Each level, and each day's daily puzzle, is checked by a solver that simulates thousands of launch angles and strengths and only accepts levels where some shots reach the target.",
+      },
+      {
+        q: "Why doesn't the probe go straight?",
+        a: "Every body pulls on the probe with a force that grows as it gets closer (inverse-square law), so its path curves toward planets, stars and especially black holes.",
+      },
+    ],
+  },
+  {
+    slug: "galaxy",
+    name: "Galaxy Collider",
+    short: "Galaxy Collider",
+    category: "gravity",
+    accent: "#e879f9",
+    tech: "3D WebGL",
+    isNew: true,
+    tagline: "Smash two spiral galaxies together and watch tidal tails form.",
+    title: "Galaxy Collision Simulation – Milky Way & Andromeda in 3D",
+    description:
+      "Interactive 3D galaxy collision simulation. Collide two spiral galaxies, tune mass, tilt and spin, and watch tidal tails, bridges and a final merger unfold over billions of years. Share your collision with a link.",
+    summary:
+      "Galaxy Collider recreates the classic Toomre & Toomre (1972) experiment: each galaxy is a massive core surrounded by a disk of stars, and the two cores fall toward each other. Stars feel both cores, so during a close pass they are flung into long tidal tails and bridges like those seen in the Antennae and Mice galaxies. An approximate dynamical-friction term drains orbital energy so the cores eventually merge into one galaxy — a likely, though not certain, fate for the Milky Way and Andromeda over the next several billion years.",
+    keywords: ["galaxy collision simulation", "galaxy merger simulator", "milky way andromeda collision", "tidal tails", "antennae galaxies"],
+    howTo: [
+      "Pick a preset — Milky Way + Andromeda, the Antennae, the Mice, a minor flyby or a retrograde collision — or set your own mass ratio, closest approach and disk tilts.",
+      "Press play and drag to orbit the camera; scroll or pinch to zoom. Scrub the timeline to rewind.",
+      "Flip a galaxy to spin backwards (retrograde) and compare how much weaker its tidal tails are.",
+      "Press Share to copy a link that recreates your exact collision.",
+    ],
+    concepts: ["Galaxy mergers", "Tidal tails", "Restricted N-body simulation", "Dynamical friction", "Retrograde vs prograde encounters"],
+    faq: [
+      {
+        q: "Will the Milky Way collide with Andromeda?",
+        a: "Andromeda is approaching at about 110 km/s. Current estimates give roughly even odds of a merger within the next 5–10 billion years. Stars almost never hit each other; the galaxies' shapes are rearranged by gravity.",
+      },
+      {
+        q: "What causes tidal tails?",
+        a: "During a close pass, stars on the near side of a disk are pulled harder than the core and stars on the far side are pulled less. That stretch flings stars out into long, curved tails. Disks spinning in the same direction as the encounter (prograde) form the strongest tails.",
+      },
+      {
+        q: "How accurate is this simulation?",
+        a: "It follows the Toomre & Toomre approach: stars are test particles moving under the gravity of two cores, which is enough to reproduce tails and bridges. Full research simulations also model dark matter halos, gas and star formation.",
+      },
+    ],
+  },
+  {
     slug: "gravity",
     name: "Gravity Engine",
     short: "Gravity",
@@ -226,6 +300,43 @@ export const simulations = [
       {
         q: "What is a basin of attraction?",
         a: "The set of all starting positions that end up at the same resting state — here, the same magnet. Each colour in the map is one basin; their tangled boundary is a fractal.",
+      },
+    ],
+  },
+  {
+    slug: "evolution",
+    name: "Evolution Lab",
+    short: "Evolution",
+    category: "emergence",
+    accent: "#2dd4bf",
+    tech: "2D Ecosystem",
+    isNew: true,
+    tagline: "Natural selection you can watch: predators, prey and an arms race.",
+    title: "Evolution Simulator – Natural Selection & Predator–Prey",
+    description:
+      "Interactive evolution simulator. Creatures with mutating genes for speed, size and sense compete for food while predators hunt them. Watch natural selection, population cycles and evolutionary arms races in real time.",
+    summary:
+      "Evolution Lab is an agent-based model of natural selection. Each creature has three genes — speed, size and sense range — and every gene has a cost: moving fast and being big burn energy, and sensing far drains a little more. Creatures that gather enough food reproduce, passing on slightly mutated genes. When predators arrive, prey that are faster or bigger than the predators survive more often, and the average genome shifts. No outcome is scripted: some runs evolve small, fast prey; others evolve large, armoured ones.",
+    keywords: ["evolution simulator", "natural selection simulation", "predator prey simulation", "genetic algorithm simulation", "ecosystem simulator"],
+    howTo: [
+      "Watch the population grow; predators arrive automatically after a few generations.",
+      "Tap or click any creature to follow it and see its genes, age, energy and number of offspring.",
+      "Open the panel to see live population and trait charts, release more predators, trigger a famine, or change food and mutation rates.",
+      "Speed up time to watch dozens of generations evolve in a few minutes.",
+    ],
+    concepts: ["Natural selection", "Mutation and heredity", "Predator–prey dynamics", "Evolutionary arms race", "Agent-based modelling"],
+    faq: [
+      {
+        q: "How does natural selection work in this simulation?",
+        a: "Creatures that find food and avoid predators live long enough to reproduce. Their children inherit their genes with small random mutations. Over generations, genes that help survival in the current environment become more common.",
+      },
+      {
+        q: "Why do predator and prey numbers rise and fall in cycles?",
+        a: "More prey feed more predators; more predators eat down the prey; then predators starve and prey recover. These are the cycles described by the Lotka–Volterra equations, here emerging from individual behaviour.",
+      },
+      {
+        q: "Why does every run end differently?",
+        a: "Mutations are random, so different runs discover different strategies — for example small and fast prey that outrun predators, or large prey that predators can't swallow.",
       },
     ],
   },
