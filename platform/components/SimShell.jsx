@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { getSimulation } from "@/shared/simulations";
+import { track } from "@/shared/track";
 
 const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
@@ -35,6 +36,35 @@ export default function SimShell({ slug, subtitle, peek, panel, onScience, stage
   const [expanded, setExpanded] = useState(false);
   const [collapsedY, setCollapsedY] = useState(null);
   const [dragging, setDragging] = useState(false);
+
+  // Engagement analytics: first interaction + active-time milestones
+  // (time only accrues while the tab is visible).
+  useEffect(() => {
+    let interacted = false;
+    const stage = document.querySelector("[data-sim-stage]");
+    const onDown = () => {
+      if (interacted) return;
+      interacted = true;
+      track("sim_interact", { sim: slug });
+    };
+    stage?.addEventListener("pointerdown", onDown, { passive: true });
+    const marks = [30, 120, 300, 600];
+    let active = 0;
+    const iv = setInterval(() => {
+      if (document.hidden) return;
+      active += 5;
+      if (marks.includes(active)) track("sim_engaged", { sim: slug, seconds: active, interacted });
+    }, 5000);
+    return () => {
+      stage?.removeEventListener("pointerdown", onDown);
+      clearInterval(iv);
+    };
+  }, [slug]);
+
+  const openScience = useCallback(() => {
+    track("science_open", { sim: slug });
+    onScience?.();
+  }, [onScience, slug]);
 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 768px)");
@@ -198,7 +228,7 @@ export default function SimShell({ slug, subtitle, peek, panel, onScience, stage
             {onScience && (
               <button
                 type="button"
-                onClick={onScience}
+                onClick={openScience}
                 className="pressable flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[color-mix(in_srgb,var(--accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--accent)_12%,transparent)] px-3 text-[14px] font-medium text-ink"
               >
                 The science

@@ -9,12 +9,15 @@ import { homeJsonLd, homeFaq } from "@/shared/structuredData";
 
 export const metadata = constructMetadata({
   description:
-    "Free interactive physics simulations in your browser: a gravity and orbit simulator, a 3D black hole, the Lorenz attractor, boids flocking, a falling sand game, electric fields and SPH fluid. No install, works on mobile.",
+    "Free interactive physics simulations and games in your browser: a gravity slingshot puzzle game, a galaxy collision simulator, an evolution simulator, a 3D black hole, the Lorenz attractor, a falling sand game and more. No install, works on mobile.",
   keywords: [
     "physics simulations",
     "interactive physics simulation",
     "online physics simulator",
     "gravity simulator",
+    "gravity game",
+    "galaxy collision simulation",
+    "evolution simulator",
     "black hole simulation",
     "lorenz attractor",
     "falling sand game",
@@ -43,6 +46,11 @@ function SimCard({ sim, priority = false }) {
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: sim.accent }} aria-hidden="true" />
           <h3 className="truncate text-[16px] font-semibold tracking-[-0.01em] text-ink md:text-[17px]">{sim.name}</h3>
+          {sim.isNew && (
+            <span className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium text-ink" style={{ background: "color-mix(in srgb, var(--accent) 22%, transparent)" }}>
+              New
+            </span>
+          )}
         </div>
         <p className="mt-1 line-clamp-2 text-[14px] leading-snug text-ink-2 md:mt-1.5 md:text-[15px]">{sim.tagline}</p>
         <div className="mt-2 flex items-center justify-between md:mt-4">
@@ -80,12 +88,12 @@ export default function Home() {
             Physics you can play with.
           </h1>
           <p className="mt-5 max-w-[34rem] text-[17px] leading-relaxed text-ink-2 md:text-xl">
-            Interactive physics simulations — gravity, a 3D black hole, chaos, flocking, sand, fields and fluids — built
-            from the real equations. No install, no sign-up, works on your phone.
+            Interactive physics simulations and games — gravity puzzles, colliding galaxies, evolving creatures, a 3D
+            black hole, chaos and more — built from the real equations. No install, no sign-up, works on your phone.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/gravity/" className="pressable btn btn-primary">
-              Start with Gravity
+            <Link href="/slingshot/" className="pressable btn btn-primary">
+              Play Gravity Slingshot
             </Link>
             <a href="#simulations" className="pressable btn btn-secondary">
               Browse all {simulations.length}

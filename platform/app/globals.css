@@ -407,6 +407,13 @@ select {
   }
 }
 
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+}
+
 @keyframes menu-in {
   from {
     opacity: 0;
@@ -426,6 +433,10 @@ select {
   .dialog-in {
     animation: dialog-in 240ms var(--ease-out) both;
   }
+}
+
+.toast-in {
+  animation: toast-in 260ms var(--ease-out) both;
 }
 
 .menu-in {
@@ -512,6 +523,7 @@ details[open] .chev {
   }
 
   .dialog-in,
+  .toast-in,
   .menu-in {
     animation: scrim-in 160ms ease both;
   }

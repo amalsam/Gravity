@@ -5,7 +5,7 @@ export const siteConfig = {
     shortName: "Stacklor Lab",
     tagline: "Physics simulations you can play with",
     description:
-        "Free interactive physics simulations that run in your browser: gravity and orbits, a 3D black hole, chaos and strange attractors, flocking, falling sand, electric fields and fluids.",
+        "Free interactive physics simulations and games that run in your browser: a gravity slingshot puzzle game, colliding galaxies, an evolution simulator, a 3D black hole, chaos, flocking, falling sand, electric fields and fluids.",
     url: "https://labs.stacklor.com",
     locale: "en_US",
     themeColor: "#0a0a0c",
