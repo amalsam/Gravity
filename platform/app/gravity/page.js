@@ -10,7 +10,7 @@ import { ActionButton, Group, Hint, Icons, Segmented, Stats } from "@/components
 export default function GravitySimulationPage() {
     const [particleCount, setParticleCount] = useState(0);
     const [fps, setFps] = useState(0);
-    const [spawnMode, setSpawnMode] = useState("single");
+    const [spawnMode, setSpawnMode] = useState("orbit");
     const [showScience, setShowScience] = useState(false);
 
     // useRef keeps the same object across ALL re-renders
@@ -30,42 +30,69 @@ export default function GravitySimulationPage() {
             lastTime: performance.now(),
             frames: 0,
             lastSpawnTime: performance.now(),
-            spawnMode: 'single',
+            spawnMode: 'orbit',
         };
     }
     const state = stateRef.current;
 
+    const MAX_PARTICLES = 14000;
+    // Circular-orbit speed for this 2D (1/r) force law: v = √(G·M), the same at every radius
+    const V_ORBIT = Math.sqrt(0.1 * 10e7);
+
     class Particle {
-        constructor(x, y) {
+        constructor(x, y, vx = 250, vy = 250) {
             this.x = x;
             this.y = y;
             this.mass = 2;
-            this.momentum_x = 500;
-            this.momentum_y = 500;
-            this.color = 'white';
+            this.momentum_x = vx * this.mass;
+            this.momentum_y = vy * this.mass;
         }
         move(x2, y2, dt, G, M) {
-            let dx = x2 - this.x;
-            let dy = y2 - this.y;
-            let hyp = Math.sqrt(dx * dx + dy * dy);
-            if (hyp < 1) return;
-            let theta = Math.atan2(dy, dx);
-            let force = (G * this.mass * M) / hyp;
-            this.momentum_x += force * Math.cos(theta) * dt;
-            this.momentum_y += force * Math.sin(theta) * dt;
+            const dx = x2 - this.x;
+            const dy = y2 - this.y;
+            const r2 = dx * dx + dy * dy;
+            if (r2 < 1) return;
+            // F = G·m·M / r along the unit vector (dx, dy)/r  →  G·m·M·(dx, dy)/r²
+            const k = (G * this.mass * M) / r2;
+            this.momentum_x += k * dx * dt;
+            this.momentum_y += k * dy * dt;
             this.x += (this.momentum_x / this.mass) * dt;
             this.y += (this.momentum_y / this.mass) * dt;
         }
-        draw(ctx) {
-            ctx.fillStyle = this.color;
-            ctx.fillRect(Math.floor(this.x), Math.floor(this.y), 2, 2);
-        }
     }
 
+    const addParticle = (p) => {
+        if (state.particles.length >= MAX_PARTICLES) state.particles.shift();
+        state.particles.push(p);
+    };
+
+    // A particle placed at (x, y) moving on a near-circular orbit around the star
+    const orbiter = (x, y, spread = 0.12) => {
+        const dx = x - state.obj1.x, dy = y - state.obj1.y;
+        const r = Math.hypot(dx, dy) || 1;
+        const v = V_ORBIT * (1 - spread + Math.random() * spread * 2);
+        return new Particle(x, y, (-dy / r) * v, (dx / r) * v);
+    };
+
+    const seedDisk = (n, width, height) => {
+        const rMax = Math.min(width, height) * 0.42;
+        for (let i = 0; i < n; i++) {
+            const r = 70 + Math.pow(Math.random(), 0.8) * (rMax - 70);
+            const a = Math.random() * Math.PI * 2;
+            addParticle(orbiter(state.obj1.x + Math.cos(a) * r, state.obj1.y + Math.sin(a) * r, 0.32));
+        }
+    };
+
+    // Star sits in the middle of the area the controls don't cover
+    const placeStar = (w) => {
+        const visibleH = window.innerHeight - simTop() - (window.innerWidth < 768 ? 140 : 0);
+        state.obj1.x = window.innerWidth >= 1024 ? (w - 340) / 2 : w / 2;
+        state.obj1.y = visibleH / 2;
+    };
+
     const init = (engine, width, height) => {
-        const mobileDrawer = window.innerWidth < 768 ? 110 : 0;
-        state.obj1.x = width / 2;
-        state.obj1.y = (height - mobileDrawer) / 2;
+        placeStar(width);
+        seedDisk(window.innerWidth < 768 ? 900 : 1600, width, height - simTop());
 
         const canvas = engine.ctx.canvas;
         
@@ -84,7 +111,8 @@ export default function GravitySimulationPage() {
         
         const spawnBasedOnMode = (x, y) => {
             const mode = state.spawnMode;
-            if (mode === 'single') state.particles.push(new Particle(x, y));
+            if (mode === 'orbit') for (let i = 0; i < 6; i++) addParticle(orbiter(x + (Math.random() - 0.5) * 24, y + (Math.random() - 0.5) * 24));
+            else if (mode === 'single') state.particles.push(new Particle(x, y));
             else if (mode === 'hline') {
                 for (let i=0; i<120; i++) state.particles.push(new Particle(Math.random()*width, y));
             } else if (mode === 'circle') {
@@ -168,7 +196,8 @@ export default function GravitySimulationPage() {
 
         if (state.isDragging && currentTime - state.lastSpawnTime > 16) {
             const mode = state.spawnMode;
-            if (mode === 'single') state.particles.push(new Particle(state.mouseX, state.mouseY));
+            if (mode === 'orbit') for (let i = 0; i < 6; i++) addParticle(orbiter(state.mouseX + (Math.random() - 0.5) * 24, state.mouseY + (Math.random() - 0.5) * 24));
+            else if (mode === 'single') state.particles.push(new Particle(state.mouseX, state.mouseY));
             else if (mode === 'hline') {
                 for (let i=0; i<120; i++) state.particles.push(new Particle(Math.random()*width, state.mouseY));
             } else if (mode === 'circle') {
@@ -186,32 +215,61 @@ export default function GravitySimulationPage() {
         for (let i = 0; i < state.particles.length; i++) {
             state.particles[i].move(state.obj1.x, state.obj1.y, state.DT, state.G, state.M);
         }
+        if (state.particles.length > MAX_PARTICLES) state.particles.splice(0, state.particles.length - MAX_PARTICLES);
     };
+
+    // Speed relative to circular-orbit speed → colour (slow = deep blue, orbital = white, fast = amber)
+    const SPEED_BINS = ['#3b5bdb', '#60a5fa', '#bfdbfe', '#ffffff', '#fde68a', '#fb923c'];
+    const bins = SPEED_BINS.map(() => []);
 
     const draw = (ctx, engine, width, height) => {
-        ctx.fillStyle = 'yellow';
-        ctx.beginPath();
-        ctx.arc(state.obj1.x, state.obj1.y, state.obj1.r, 0, Math.PI * 2);
-        ctx.fill();
+        const { x: sx, y: sy, r: sr } = state.obj1;
 
-        for (let i = 0; i < state.particles.length; i++) {
-            state.particles[i].draw(ctx);
+        // Particles, batched by speed bin, added together so dense regions glow
+        for (const b of bins) b.length = 0;
+        for (const p of state.particles) {
+            const v = Math.hypot(p.momentum_x, p.momentum_y) / p.mass / V_ORBIT;
+            const i = v < 0.45 ? 0 : v < 0.75 ? 1 : v < 0.92 ? 2 : v < 1.1 ? 3 : v < 1.5 ? 4 : 5;
+            bins[i].push(p);
         }
+        ctx.globalCompositeOperation = 'lighter';
+        for (let i = 0; i < bins.length; i++) {
+            ctx.fillStyle = SPEED_BINS[i];
+            ctx.globalAlpha = 0.85;
+            for (const p of bins[i]) ctx.fillRect(p.x - 0.8, p.y - 0.8, 1.6, 1.6);
+        }
+        ctx.globalAlpha = 1;
+
+        // Star: soft corona + hot core
+        const pulse = 1 + Math.sin(performance.now() / 900) * 0.04;
+        const corona = ctx.createRadialGradient(sx, sy, sr * 0.6, sx, sy, sr * 6 * pulse);
+        corona.addColorStop(0, 'rgba(255,214,120,0.55)');
+        corona.addColorStop(0.35, 'rgba(255,170,60,0.16)');
+        corona.addColorStop(1, 'rgba(255,140,40,0)');
+        ctx.fillStyle = corona;
+        ctx.beginPath(); ctx.arc(sx, sy, sr * 6 * pulse, 0, Math.PI * 2); ctx.fill();
+        ctx.globalCompositeOperation = 'source-over';
+        const core = ctx.createRadialGradient(sx - 3, sy - 3, 1, sx, sy, sr);
+        core.addColorStop(0, '#fffdf2');
+        core.addColorStop(0.5, '#ffe08a');
+        core.addColorStop(1, '#f59e0b');
+        ctx.fillStyle = core;
+        ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2); ctx.fill();
     };
 
-    const handleResize = (w, h) => {
-        const mobileDrawer = window.innerWidth < 768 ? 110 : 0;
-        state.obj1.x = w / 2;
-        state.obj1.y = (h - mobileDrawer) / 2;
-    };
+    const handleResize = (w) => placeStar(w);
 
     const setBrush = (id) => { setSpawnMode(id); state.spawnMode = id; };
     const clearParticles = () => { state.particles = []; setParticleCount(0); };
+    const reseed = () => {
+        const c = document.querySelector('[data-sim-stage] canvas');
+        seedDisk(window.innerWidth < 768 ? 900 : 1600, c?.width || window.innerWidth, (c?.height || window.innerHeight) - simTop());
+    };
 
     return (
         <SimShell
             slug="gravity"
-            subtitle="Newtonian gravity · Euler integration"
+            subtitle="2D gravity · rosette orbits"
             onScience={() => setShowScience(true)}
             peek={
                 <div className="flex items-center justify-between gap-3">
@@ -229,14 +287,22 @@ export default function GravitySimulationPage() {
                 <>
                     <Group label="Brush">
                         <Segmented label="Spawn brush" value={spawnMode} onChange={setBrush} columns={2} options={[
-                            { value: "single", label: "Single" },
-                            { value: "circle", label: "Circle" },
+                            { value: "orbit", label: "Orbit" },
+                            { value: "single", label: "Drop" },
+                            { value: "circle", label: "Cluster" },
                             { value: "hline", label: "Horizontal line" },
                             { value: "vline", label: "Vertical line" },
                         ]} />
-                        <Hint>Drag on the canvas to stream particles toward the star. On a keyboard, hold 1, 2 or 3 for rapid-fire patterns.</Hint>
+                        <Hint>Orbit paints particles already moving at orbital speed, so they stay. The others drop particles with a small sideways push and let gravity decide. On a keyboard, hold 1, 2 or 3 for rapid-fire patterns.</Hint>
                     </Group>
-                    <ActionButton tone="danger" icon={Icons.clear} onClick={clearParticles}>Clear particles</ActionButton>
+                    <Group label="Colour = speed">
+                        <div className="h-2 rounded-full" style={{ background: "linear-gradient(90deg,#3b5bdb,#60a5fa,#bfdbfe,#ffffff,#fde68a,#fb923c)" }} aria-hidden="true" />
+                        <div className="flex justify-between text-[12px] text-ink-3"><span>Slower than orbit</span><span>Orbital</span><span>Faster</span></div>
+                    </Group>
+                    <div className="grid grid-cols-2 gap-2">
+                        <ActionButton icon={Icons.play} onClick={reseed}>Seed a disk</ActionButton>
+                        <ActionButton tone="danger" icon={Icons.clear} onClick={clearParticles}>Clear</ActionButton>
+                    </div>
                 </>
             }
         >
@@ -245,41 +311,44 @@ export default function GravitySimulationPage() {
                 updateSimulation={update}
                 drawSimulation={draw}
                 onResize={handleResize}
+                background="rgba(4,6,14,0.22)"
             />
             {showScience && (
                 <ScienceModal
-                    title="Gravity 2D — Orbital Mechanics"
-                    accentClass="text-blue-400 border-blue-400/30 bg-blue-400/10"
+                    title="Gravity Engine — Orbits in a 2D Universe"
                     onClose={() => setShowScience(false)}
                     sections={[
                         {
-                            heading: "Newtonian Gravity",
-                            text: "Each particle experiences a gravitational force from the central star. The force follows Newton's Law of Universal Gravitation — it grows stronger as particles get closer, creating the curved orbital paths seen in the simulation.",
+                            heading: "Gravity in two dimensions",
+                            text: "In our 3D universe gravity weakens as 1/r², because its pull spreads over the surface of a sphere. In a flat 2D world it spreads around a circle instead, so it weakens only as 1/r. This simulation uses that 2D law — which is why its orbits look different from the planets'.",
                             equations: [
-                                { label: "Force",      value: "F = G·M·m / r²" },
-                                { label: "Escape Vel", value: "v_e = √(2·G·M / r)" },
-                                { label: "Orbit Vel",  value: "v_c = √(G·M / r)" },
-                            ]
+                                { label: "Force (2D)", value: "F = G·M·m / r" },
+                                { label: "Force (3D)", value: "F = G·M·m / r²   (for comparison)" },
+                            ],
                         },
                         {
-                            heading: "Euler Integration — Particle Motion",
-                            text: "Position and velocity are updated every frame using semi-implicit Euler integration. This runs stably at 60 fps without full Runge-Kutta expense.",
+                            heading: "The same orbital speed everywhere",
+                            text: "For a circular orbit, gravity must supply the centripetal force m·v²/r. With a 1/r force the r cancels: every circular orbit, near or far, has the same speed. The colours show this — white particles are moving at that orbital speed, blue ones are slower and falling inward, amber ones are faster and swinging outward.",
+                            equations: [
+                                { label: "Balance", value: "m·v²/r = G·M·m / r" },
+                                { label: "Orbit speed", value: "v = √(G·M)   (independent of r)" },
+                            ],
+                        },
+                        {
+                            heading: "Why orbits look like flowers",
+                            text: "Only two force laws make every bound orbit close on itself: 1/r² and the spring force (Bertrand's theorem). With 1/r gravity, a non-circular orbit's closest point creeps forward each time round, tracing a rosette. And because the potential grows like log(r) forever, nothing can fully escape — every particle eventually swings back.",
+                        },
+                        {
+                            heading: "Integration",
+                            text: "Each frame updates momentum from the force, then position from the new momentum (semi-implicit Euler). It is cheap enough to move thousands of particles at 60 fps.",
                             code:
-`// Gravitational acceleration towards star
-const dx = starX - this.x,  dy = starY - this.y;
-const r  = Math.sqrt(dx*dx + dy*dy);
-const a  = G * M / (r * r);   // |a| = G·M/r²
-
-// Semi-implicit Euler (update v first, then pos)
-this.vx += (dx/r) * a * DT;
-this.vy += (dy/r) * a * DT;
-this.x  += this.vx * DT;
-this.y  += this.vy * DT;`
+`// Acceleration toward the star, 2D gravity (1/r)
+const dx = starX - x, dy = starY - y;
+const r2 = dx*dx + dy*dy;
+const k  = G * m * M / r2;        // |F| = G·m·M/r, times (dx,dy)/r
+px += k * dx * dt;  py += k * dy * dt;   // momentum
+x  += px / m * dt;  y  += py / m * dt;   // position`,
                         },
-                        {
-                            heading: "Orbit Formation",
-                            text: "Stable orbits form when centripetal acceleration equals gravitational acceleration: v²/r = GM/r², giving orbital speed v_c = √(GM/r). Particles spawned faster than escape velocity v_e = v_c·2 leave the system. Particles below orbital speed spiral inward. Mixed spawns produce the elliptical paths visible in this simulation."
-                        }
                     ]}
                 />
             )}

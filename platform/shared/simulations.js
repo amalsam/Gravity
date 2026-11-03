@@ -107,28 +107,32 @@ export const simulations = [
     category: "gravity",
     accent: "#60a5fa",
     tech: "2D Canvas",
-    tagline: "Stream particles into a star and watch orbits form.",
+    tagline: "Paint thousands of particles into orbit and watch rosettes form.",
     title: "Gravity Simulator – Interactive 2D Orbital Mechanics",
     description:
-      "Free online gravity simulator. Drag to stream particles toward a central star and watch Newtonian gravity bend them into elliptical orbits, slingshots and escapes in real time.",
+      "Free online gravity simulator. Paint thousands of glowing particles into orbit around a star and watch 2D gravity weave them into rosettes, rings and slingshots in real time.",
     summary:
-      "A 2D gravity simulator built on Newton's law of universal gravitation. Every particle is pulled toward a central star with a force proportional to the star's mass, and its velocity and position are updated each frame with semi-implicit Euler integration. Depending on how fast and where you spawn particles, they fall in, settle into elliptical orbits or escape.",
+      "A gravity simulator set in a two-dimensional universe. In 2D, gravity weakens as 1/r rather than the familiar 1/r², which has two striking consequences you can see on screen: every circular orbit has the same speed, whatever its size, and orbits that aren't circular precess into flower-like rosettes instead of closing into ellipses. Particles are coloured by speed relative to orbital speed, so you can watch them fall inward (blue), circle (white) or swing outward (amber).",
     keywords: ["gravity simulator", "orbit simulator", "orbital mechanics simulation", "newtonian gravity", "physics sandbox"],
     howTo: [
-      "Press and drag anywhere on the canvas to stream particles toward the star.",
-      "Choose a brush — single, circle, horizontal line or vertical line — to change how particles spawn.",
-      "On a keyboard, hold 1, 2 or 3 for rapid-fire line, cluster and column patterns; Ctrl-click adds one particle.",
-      "Use Clear particles to start over.",
+      "Drag anywhere to paint particles. The default Orbit brush launches them at orbital speed so they stay in orbit.",
+      "Switch to Drop, Cluster or a line brush to release particles with only a small push and watch gravity pull them into rosettes.",
+      "On a keyboard, hold 1, 2 or 3 for rapid-fire patterns; Ctrl-click adds a single particle.",
+      "Use Seed a disk to add a fresh orbiting disk, or Clear to start over.",
     ],
-    concepts: ["Newton's law of universal gravitation", "Orbital velocity", "Escape velocity", "Euler integration"],
+    concepts: ["Gravity in two dimensions", "Circular orbital speed", "Orbital precession", "Bertrand's theorem", "Euler integration"],
     faq: [
       {
-        q: "How does this gravity simulator work?",
-        a: "Each particle feels a gravitational pull toward the central star, F = G·M·m / r². Every frame the simulation turns that force into acceleration, updates the particle's velocity, then its position (semi-implicit Euler integration). Repeating this 60 times a second produces orbits.",
+        q: "Why does gravity follow 1/r in this simulation?",
+        a: "The simulation is set in a flat 2D world. Gravity's pull spreads around a circle instead of over a sphere, so it weakens as 1/r rather than 1/r². It is the honest 2D version of Newton's law.",
       },
       {
-        q: "Why do some particles orbit and others escape?",
-        a: "A particle that moves at roughly the circular orbital speed √(GM/r) for its distance settles into an orbit. Slower particles spiral inward; particles faster than escape velocity √(2GM/r) fly off and never return.",
+        q: "Why do the orbits look like flowers?",
+        a: "Only the 1/r² and spring force laws produce orbits that close on themselves (Bertrand's theorem). Under 1/r gravity the closest point of a non-circular orbit advances every lap, tracing a rosette.",
+      },
+      {
+        q: "What do the colours mean?",
+        a: "Colour shows speed compared with circular-orbit speed: white is orbital, blue is slower (falling inward) and amber is faster (swinging outward).",
       },
       {
         q: "Do I need to install anything?",
@@ -178,7 +182,7 @@ export const simulations = [
     category: "gravity",
     accent: "#34d399",
     tech: "3D Canvas",
-    tagline: "Every particle pulls on every other — O(N²) gravity in 3D.",
+    tagline: "A spinning cloud where every particle pulls on every other.",
     title: "N-Body Simulation – 3D Particle Gravity Sandbox",
     description:
       "Interactive 3D N-body gravity simulation in your browser. Spawn particles or bursts, tune mass and time dilation, and watch clusters, binaries and orbits emerge from pairwise O(N²) forces.",
@@ -186,7 +190,8 @@ export const simulations = [
       "A 3D N-body sandbox where every particle attracts every other particle. With N bodies that is N·(N−1)/2 pairwise force calculations per frame, which is why this kind of simulation is described as O(N²). A softening term keeps close encounters numerically stable, and over time the system clumps into clusters, binary pairs and orbiting groups.",
     keywords: ["n-body simulation", "particle gravity simulation", "3D particle simulator", "gravitational clustering", "O(N^2) simulation"],
     howTo: [
-      "Click or tap on the canvas to spawn a particle; switch to Burst to spawn a cluster.",
+      "The sandbox opens with a rotating disk of particles that pulls itself into clusters.",
+      "Click or tap to spawn a particle; switch to Burst to spawn a cluster.",
       "Drag to orbit the camera, right-drag or two-finger drag to pan, and scroll or pinch to zoom.",
       "Change particle size and mass, or slow time down with time dilation.",
     ],
@@ -244,17 +249,17 @@ export const simulations = [
     category: "chaos",
     accent: "#fb923c",
     tech: "3D Chaos",
-    tagline: "Lorenz, Rössler and Thomas attractors traced in light.",
+    tagline: "Three paths start 0.001 apart. Watch chaos tear them away from each other.",
     title: "Lorenz Attractor Simulation – Strange Attractors & Chaos Theory",
     description:
-      "Interactive Lorenz, Rössler and Thomas strange attractor simulation. Watch chaos theory unfold as RK4 integration traces glowing 3D trails that slowly rotate as they draw.",
+      "Interactive Lorenz, Rössler and Thomas strange attractor simulation. Watch three paths that start 0.001 apart diverge across the attractor — the butterfly effect — traced with RK4 integration in rotating 3D.",
     summary:
       "Strange attractors are the shapes that chaotic systems settle onto. This simulation integrates three classic systems of differential equations — Lorenz, Rössler and Thomas — with fourth-order Runge–Kutta (RK4) and draws the trajectory as a glowing 3D trail. The path never repeats and never crosses itself, yet it stays confined to a recognisable shape.",
     keywords: ["lorenz attractor", "strange attractor", "chaos theory simulation", "rossler attractor", "butterfly effect", "RK4"],
     howTo: [
-      "Pick an attractor: Lorenz, Rössler or Thomas.",
-      "Adjust trail length and integration speed.",
-      "Turn auto-rotate on or off to inspect the 3D shape, and reset the trail to start again.",
+      "Pick an attractor: Lorenz, Rössler or Thomas. The faint outline shows the whole shape.",
+      "Watch the three coloured paths: they start 0.001 apart and soon end up on completely different parts of the attractor.",
+      "Adjust trail length and speed, turn auto-rotate on or off, and restart the paths to see it again.",
     ],
     concepts: ["Chaos theory", "Lorenz system", "Butterfly effect", "Runge–Kutta (RK4) integration"],
     faq: [
@@ -378,17 +383,18 @@ export const simulations = [
     category: "emergence",
     accent: "#d6b88a",
     tech: "2D Automata",
-    tagline: "Paint with sand, water, fire and stone.",
+    tagline: "Paint with sand, water, wood, fire and stone — then set it alight.",
     title: "Falling Sand Game – Cellular Automata Sandbox",
     description:
-      "Free falling sand game in your browser. Paint with sand, water, fire and stone and watch cellular automata rules make piles, pools and flames pixel by pixel.",
+      "Free falling sand game in your browser. Paint with sand, water, wood, fire and stone: sand piles up, water flows, fire spreads through wood and boils water into steam — all from simple cellular automata rules.",
     summary:
       "A falling-sand sandbox built on cellular automata. The screen is a grid of cells; every frame each cell looks at its neighbours and follows a small rule for its material — sand falls and piles, water flows sideways, fire rises and burns out, stone stays put. Scanning the grid from the bottom up keeps falling material from moving twice in one frame.",
     keywords: ["falling sand game", "sand simulator", "cellular automata", "powder game", "pixel physics"],
     howTo: [
-      "Choose sand, water, fire or stone — or Erase — and paint on the canvas by dragging.",
-      "Change the brush size for broad strokes or fine detail.",
-      "Clear the grid to start over.",
+      "The demo scene pours sand and water for a few seconds — then it's yours. Drag to paint with the selected material.",
+      "Set fire to the wooden frame, or pour water on the flames to make steam.",
+      "Change the brush size for broad strokes or fine detail; use Erase to dig channels.",
+      "Load the demo scene again or clear the canvas to start over.",
     ],
     concepts: ["Cellular automata", "Local update rules", "Granular flow"],
     faq: [
@@ -409,17 +415,18 @@ export const simulations = [
     category: "fields",
     accent: "#facc15",
     tech: "2D Canvas",
-    tagline: "Drop charges, see Coulomb field lines draw themselves.",
+    tagline: "Drag charges around and watch the field flow between them.",
     title: "Electric Field Simulator – Coulomb Field Lines & Equipotentials",
     description:
-      "Interactive electric field simulator. Place positive and negative charges and watch Coulomb field lines and equipotential lines update in real time.",
+      "Interactive electric field simulator. Drag positive and negative charges and watch Coulomb field lines, a glowing potential map and streams of test charges reshape in real time. Includes dipole, quadrupole and capacitor presets.",
     summary:
       "An electric field visualiser built on Coulomb's law. Each charge produces a field E = kq / r², and by the superposition principle the total field at any point is the vector sum of every charge's contribution. Field lines start on positive charges and end on negative ones; equipotential lines cross them at right angles.",
     keywords: ["electric field simulator", "coulomb's law simulation", "electric field lines", "equipotential lines", "electrostatics"],
     howTo: [
-      "Choose positive or negative, then click or tap to place a charge.",
-      "Toggle field lines and equipotential lines on or off.",
-      "Clear all charges to start a new arrangement.",
+      "Start from a preset — dipole, like charges, quadrupole, capacitor or triangle.",
+      "Drag any charge to move it; the field lines, potential map and flowing test charges update as you drag.",
+      "Tap empty space to add a charge of the selected sign, or tap a charge to remove it.",
+      "Toggle the flowing test charges, field lines and potential map to see each view of the same field.",
     ],
     concepts: ["Coulomb's law", "Superposition principle", "Field lines", "Equipotential surfaces"],
     faq: [
@@ -440,17 +447,18 @@ export const simulations = [
     category: "fields",
     accent: "#818cf8",
     tech: "2D SPH",
-    tagline: "Real-time water from smoothed particle hydrodynamics.",
+    tagline: "Break a dam, stir the water, flip gravity and watch it splash.",
     title: "Fluid Simulation – Smoothed Particle Hydrodynamics (SPH)",
     description:
-      "Real-time 2D fluid simulation using smoothed particle hydrodynamics. Pour water, change gravity and viscosity, and watch pressure and flow in your browser.",
+      "Real-time 2D water simulation in your browser. Break a dam, stir the fluid, pour more in and flip gravity to watch particle-based hydrodynamics splash, slosh and settle. Tune viscosity from water to honey.",
     summary:
-      "Smoothed particle hydrodynamics (SPH) models a fluid as many particles that each carry mass. A smoothing kernel turns nearby particles into a continuous density; density gives pressure, pressure gives force, and viscosity smooths out velocity differences. The result is water that splashes, settles and sloshes in real time.",
-    keywords: ["fluid simulation", "sph simulation", "smoothed particle hydrodynamics", "water simulation", "real-time fluid"],
+      "A real-time 2D fluid built from particles, in the family of Smoothed Particle Hydrodynamics (SPH). Each particle measures how crowded its neighbourhood is; crowded regions push particles apart and sparse ones pull them together, which produces pressure, splashes and a cohesive surface. The solver uses double density relaxation (Clavet et al., 2005), which moves particles directly to relieve pressure and so stays stable at real-time step sizes.",
+    keywords: ["fluid simulation", "water simulation", "sph simulation", "smoothed particle hydrodynamics", "dam break simulation"],
     howTo: [
-      "Click or drag on the canvas to pour in fluid particles (up to 600).",
-      "Set gravity to down, zero or up, and change the viscosity.",
-      "Switch the colour mode between speed, density and flat.",
+      "The tank opens with a dam break. Drag with the Stir tool to push the water around.",
+      "Switch to Pour and drag to add more fluid.",
+      "Flip gravity up, down or to zero for a big splash, and raise viscosity to turn water into oil or honey.",
+      "Colour the particles by speed or density to see how the flow and pressure change.",
     ],
     concepts: ["Smoothed particle hydrodynamics", "Smoothing kernel", "Pressure and viscosity", "Lagrangian fluid simulation"],
     faq: [
