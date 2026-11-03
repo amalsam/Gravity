@@ -1,0 +1,5 @@
+User-Agent: *
+Allow: /
+
+Host: https://labs.stacklor.com
+Sitemap: https://labs.stacklor.com/sitemap.xml
