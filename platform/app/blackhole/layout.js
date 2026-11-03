@@ -1,11 +1,8 @@
-import { constructMetadata } from "@/shared/seo";
+import SimPage from "@/components/SimPage";
+import { simulationMetadata } from "@/shared/seo";
 
-export const metadata = constructMetadata({
-  title: "Black Hole Simulation – Relativistic 3D Rendering",
-  description: "An interactive, accurate 3D black hole visualization with Einstein ring microlensing.",
-  keywords: ["black hole simulation", "relativity", "Einstein ring", "Three.js black hole"],
-});
+export const metadata = simulationMetadata("blackhole");
 
-export default function BlackHoleLayout({ children }) {
-  return <>{children}</>;
+export default function BlackholeLayout({ children }) {
+  return <SimPage slug="blackhole">{children}</SimPage>;
 }

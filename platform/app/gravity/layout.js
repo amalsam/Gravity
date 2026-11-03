@@ -1,11 +1,8 @@
-import { constructMetadata } from "@/shared/seo";
+import SimPage from "@/components/SimPage";
+import { simulationMetadata } from "@/shared/seo";
 
-export const metadata = constructMetadata({
-  title: "Gravity Simulation – Interactive Physics Demo",
-  description: "Explore gravity with a real-time 2D planetary gravity simulator.",
-  keywords: ["gravity simulation", "physics demo", "particle system", "2D gravity"],
-});
+export const metadata = simulationMetadata("gravity");
 
 export default function GravityLayout({ children }) {
-  return <>{children}</>;
+  return <SimPage slug="gravity">{children}</SimPage>;
 }

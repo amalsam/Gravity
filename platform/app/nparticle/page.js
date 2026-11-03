@@ -1,18 +1,17 @@
 "use client";
 
+import { simTop } from "@/core/viewport";
 import { useState, useRef } from "react";
 import CanvasSimulation from "@/components/CanvasSimulation";
 import { applyGravity, handleCollision3D } from "@/core/physics";
-import { AdBanner } from "@/shared/ads";
 import ScienceModal from "@/components/ScienceModal";
+import SimShell from "@/components/SimShell";
+import { ActionButton, Group, Icons, Segmented, Slider, Stats } from "@/components/controls";
 
 export default function NParticleSimulationPage() {
     const [stats, setStats] = useState({ particles: 0, fps: 0 });
     const [settings, setSettings] = useState({ speed: 1.0, size: 10, mode: 'single', camX: 0, camY: 0, camZ: 1500, panX: 0, panY: 0 });
-    const [isMobileExpanded, setIsMobileExpanded] = useState(false);
-    const [isDesktopPanelOpen, setIsDesktopPanelOpen] = useState(true);
     const [showScience, setShowScience] = useState(false);
-    const swipeRef = useRef({ startY: 0, startX: 0 });
 
     // Mutable simulation state container
     const s = useRef({
@@ -139,9 +138,9 @@ export default function NParticleSimulationPage() {
             s.current.isDraggingCamera = true;
             isActivelyDraggingMouse = false;
             s.current.lastMouseX = e.clientX;
-            s.current.lastMouseY = e.clientY - 64;
+            s.current.lastMouseY = e.clientY - simTop();
             mouseStartX = e.clientX;
-            mouseStartY = e.clientY - 64;
+            mouseStartY = e.clientY - simTop();
             mouseStartTime = performance.now();
             s.current.mouseButton = e.button; // 0=left, 1=middle, 2=right
         });
@@ -149,7 +148,7 @@ export default function NParticleSimulationPage() {
         window.addEventListener('mousemove', (e) => {
             if (e.target.tagName === 'CANVAS') {
                 s.current.mouseX = e.clientX;
-                s.current.mouseY = e.clientY - 64;
+                s.current.mouseY = e.clientY - simTop();
                 s.current.showCrosshair = true;
             } else {
                 s.current.showCrosshair = false;
@@ -157,7 +156,7 @@ export default function NParticleSimulationPage() {
 
             if (s.current.isDraggingCamera && e.target.tagName === 'CANVAS') {
                 const currentSettings = s.current.settingsRef;
-                let my = e.clientY - 64;
+                let my = e.clientY - simTop();
                 
                 let dist = Math.hypot(e.clientX - mouseStartX, my - mouseStartY);
                 if (dist > 5 && !isActivelyDraggingMouse) {
@@ -182,7 +181,7 @@ export default function NParticleSimulationPage() {
         window.addEventListener('mouseup', (e) => {
             if (s.current.isDraggingCamera) {
                 const currentSettings = s.current.settingsRef;
-                let my = e.clientY - 64;
+                let my = e.clientY - simTop();
                 let dist = Math.hypot(e.clientX - mouseStartX, my - mouseStartY);
                 let time = performance.now() - mouseStartTime;
 
@@ -213,7 +212,7 @@ export default function NParticleSimulationPage() {
                 let touch = e.touches[0];
                 activeTouchId = touch.identifier;
                 lx = touch.clientX;
-                ly = touch.clientY - 64;
+                ly = touch.clientY - simTop();
                 touchStartX = lx;
                 touchStartY = ly;
                 touchStartTime = performance.now();
@@ -234,7 +233,7 @@ export default function NParticleSimulationPage() {
                 s.current.lastPinchDist = Math.hypot(dx, dy);
                 
                 lastPanX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-                lastPanY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - 64;
+                lastPanY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - simTop();
             }
         }, {passive: false});
 
@@ -246,7 +245,7 @@ export default function NParticleSimulationPage() {
             if (e.touches.length === 1 && isOrbiting) {
                 let touch = e.touches[0];
                 if (touch.identifier === activeTouchId) {
-                    let ty = touch.clientY - 64;
+                    let ty = touch.clientY - simTop();
                     
                     let dist = Math.hypot(touch.clientX - touchStartX, ty - touchStartY);
                     if (dist > 10 && !isActivelyDraggingTouch) {
@@ -280,7 +279,7 @@ export default function NParticleSimulationPage() {
 
                 // Pan
                 let panX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-                let panY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - 64;
+                let panY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - simTop();
                 
                 currentSettings.panX -= (panX - lastPanX) * 2;
                 currentSettings.panY -= (panY - lastPanY) * 2;
@@ -295,7 +294,7 @@ export default function NParticleSimulationPage() {
             if (e.changedTouches.length > 0) {
                 let touch = e.changedTouches[0];
                 if (touch.identifier === activeTouchId && isOrbiting) {
-                    let ty = touch.clientY - 64;
+                    let ty = touch.clientY - simTop();
                     let dist = Math.hypot(touch.clientX - touchStartX, ty - touchStartY);
                     let time = performance.now() - touchStartTime;
                     
@@ -316,7 +315,7 @@ export default function NParticleSimulationPage() {
                 let touch = e.touches[0];
                 activeTouchId = touch.identifier;
                 lx = touch.clientX;
-                ly = touch.clientY - 64;
+                ly = touch.clientY - simTop();
                 s.current.mouseX = lx;
                 s.current.mouseY = ly;
                 s.current.showCrosshair = true;
@@ -463,213 +462,51 @@ export default function NParticleSimulationPage() {
         ctx.globalAlpha = 1.0;
     };
 
-    const renderPanelContent = () => (
-        <>
-            <div className="flex items-center gap-2 mb-1">
-                <span className="text-xl">🐝</span>
-                <h2 className="text-xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-400">N-Particle</h2>
-            </div>
-            <p className="text-[10px] text-gray-400 tracking-wider mb-3 pb-2 border-b border-white/10 uppercase font-semibold">O(N²) 3D Swarm</p>
-            
-            <div className="grid grid-cols-2 gap-2 mb-3 bg-black/40 p-3 rounded-xl border border-white/5">
-                <div className="flex flex-col">
-                    <span className="text-gray-500 text-[9px] font-bold tracking-wider mb-0.5">PARTICLES</span>
-                    <span className="text-white font-mono text-lg leading-tight">{stats.particles}</span>
-                </div>
-                <div className="flex flex-col border-l border-white/10 pl-3">
-                    <span className="text-gray-500 text-[9px] font-bold tracking-wider mb-0.5">FPS</span>
-                    <span className={`font-mono text-lg leading-tight ${stats.fps < 30 ? 'text-red-400' : 'text-emerald-400'}`}>{stats.fps}</span>
-                </div>
-            </div>
-
-            <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
-                
-                <div className="bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-xl mb-3">
-                    <ul className="text-[10px] text-emerald-200/80 space-y-1 leading-snug font-medium">
-                        <li className="flex items-center gap-1.5">
-                            <span className="text-emerald-400">🔄</span>
-                            <span><strong className="text-emerald-400">Orbit:</strong> 1-Finger Drag / Left Click</span>
-                        </li>
-                        <li className="flex items-center gap-1.5">
-                            <span className="text-emerald-400">✋</span>
-                            <span><strong className="text-emerald-400">Pan:</strong> 2-Finger Drag / Right Click</span>
-                        </li>
-                        <li className="flex items-center gap-1.5">
-                            <span className="text-emerald-400">🔍</span>
-                            <span><strong className="text-emerald-400">Zoom:</strong> Pinch / Scroll</span>
-                        </li>
-                        <li className="flex items-center gap-1.5">
-                            <span className="text-emerald-400">✨</span>
-                            <span><strong className="text-emerald-400">Spawn:</strong> Quick Tap / Click</span>
-                        </li>
-                    </ul>
-                </div>
-
-                <div className="space-y-3">
-                    <div className="flex justify-between items-center mb-0.5">
-                        <label className="text-gray-400 text-[9px] font-bold tracking-wider">SPAWN TYPE</label>
-                    </div>
-                    <div className="flex gap-2 mb-3">
-                        <button onClick={() => setSettings(p => ({...p, mode: 'single'}))} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${settings.mode === 'single' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-[0_0_15px_rgba(52,211,153,0.3)]' : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/10'}`}>SINGLE</button>
-                        <button onClick={() => setSettings(p => ({...p, mode: 'circle'}))} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${settings.mode === 'circle' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-[0_0_15px_rgba(52,211,153,0.3)]' : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/10'}`}>BURST</button>
-                    </div>
-
-                    <div className="pt-2 border-t border-white/10 space-y-2">
-                        <div className="space-y-1">
-                            <div className="flex justify-between">
-                                <label className="text-gray-400 text-[9px] font-bold tracking-wider">PARTICLE SIZE / MASS</label>
-                                <span className="text-[9px] font-mono text-emerald-400">{settings.size}</span>
-                            </div>
-                            <input type="range" min="2" max="30" value={settings.size} onChange={(e) => setSettings(prev => ({...prev, size: parseInt(e.target.value)}))} className="w-full h-1 bg-gray-700 rounded-lg appearance-none accent-emerald-500 cursor-pointer" />
-                        </div>
-
-                        <div className="space-y-1">
-                            <div className="flex justify-between">
-                                <label className="text-gray-400 text-[9px] font-bold tracking-wider">TIME DIALATION</label>
-                                <span className="text-[9px] font-mono text-emerald-400">{settings.speed.toFixed(1)}x</span>
-                            </div>
-                            <input type="range" min="0.1" max="5.0" step="0.1" value={settings.speed} onChange={(e) => setSettings(prev => ({...prev, speed: parseFloat(e.target.value)}))} className="w-full h-1 bg-gray-700 rounded-lg appearance-none accent-emerald-500 cursor-pointer" />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="pt-3 mt-3 border-t border-white/10">
-                    <button 
-                        onClick={() => { s.current.particles = []; setStats(p => ({...p, particles: 0})); }}
-                        className="w-full py-2 bg-red-500/10 border border-red-500/30 text-red-300 rounded-lg text-[10px] font-bold hover:bg-red-500/20 hover:text-white transition-all flex items-center justify-center gap-1.5"
-                    >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        CLEAR SWARM
-                    </button>
-                    <button
-                        onClick={() => setShowScience(true)}
-                        className="w-full py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded-lg text-[10px] font-bold hover:bg-emerald-500/20 hover:text-white transition-all flex items-center justify-center gap-1.5"
-                    >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-                        THE SCIENCE
-                    </button>
-                </div>
-            </div>
-        </>
-    );
-
-    const renderMobilePanelContent = () => (
-        <>
-            {/* === PEEK ROW: always visible === */}
-            <div className="flex items-center gap-2">
-                {/* Title + subtitle */}
-                <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="text-lg">🐝</span>
-                    <div>
-                        <div className="text-sm font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-400 leading-none">N-Particle</div>
-                        <div className="text-[8px] text-gray-500 tracking-widest uppercase">O(N²) Swarm</div>
-                    </div>
-                </div>
-
-                {/* Live stats pills */}
-                <div className="flex gap-1.5 ml-auto shrink-0">
-                    <div className="flex flex-col items-center bg-black/40 border border-white/5 rounded-lg px-2.5 py-1">
-                        <span className="text-[8px] text-gray-500 font-bold tracking-wider">PTC</span>
-                        <span className="text-white font-mono text-xs leading-none">{stats.particles}</span>
-                    </div>
-                    <div className="flex flex-col items-center bg-black/40 border border-white/5 rounded-lg px-2.5 py-1">
-                        <span className="text-[8px] text-gray-500 font-bold tracking-wider">FPS</span>
-                        <span className={`font-mono text-xs leading-none ${stats.fps < 30 ? 'text-red-400' : 'text-emerald-400'}`}>{stats.fps}</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Spawn mode toggle — always in peek */}
-            <div className="flex gap-2 mt-2.5">
-                <button
-                    onClick={() => setSettings(p => ({...p, mode: 'single'}))}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-bold transition-all ${
-                        settings.mode === 'single'
-                            ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-[0_0_15px_rgba(52,211,153,0.25)]'
-                            : 'bg-white/5 text-gray-400 border border-white/10'
-                    }`}
-                >
-                    <span>✨</span> SINGLE
-                </button>
-                <button
-                    onClick={() => setSettings(p => ({...p, mode: 'circle'}))}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-bold transition-all ${
-                        settings.mode === 'circle'
-                            ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-[0_0_15px_rgba(52,211,153,0.25)]'
-                            : 'bg-white/5 text-gray-400 border border-white/10'
-                    }`}
-                >
-                    <span>💥</span> BURST
-                </button>
-            </div>
-
-            {/* === EXPANDED content === */}
-            {isMobileExpanded && (
-                <div className="mt-3 space-y-3 overflow-y-auto pr-0.5 custom-scrollbar" style={{maxHeight: 'calc(65vh - 130px)'}}>
-                    {/* Controls hint */}
-                    <div className="grid grid-cols-2 gap-1.5">
-                        {[
-                            { icon: '🔄', label: 'Orbit', hint: '1-Finger' },
-                            { icon: '✋', label: 'Pan',   hint: '2-Finger' },
-                            { icon: '🔍', label: 'Zoom',  hint: 'Pinch' },
-                            { icon: '✨', label: 'Spawn', hint: 'Quick Tap' },
-                        ].map(({ icon, label, hint }) => (
-                            <div key={label} className="flex items-center gap-1.5 bg-emerald-500/5 border border-emerald-500/10 rounded-lg px-2 py-1.5">
-                                <span className="text-sm">{icon}</span>
-                                <div>
-                                    <div className="text-[9px] font-bold text-emerald-400">{label}</div>
-                                    <div className="text-[8px] text-gray-500">{hint}</div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Sliders */}
-                    <div className="space-y-3 pt-2 border-t border-white/10">
-                        <div className="space-y-1.5">
-                            <div className="flex justify-between">
-                                <label className="text-gray-400 text-[9px] font-bold tracking-wider">PARTICLE SIZE / MASS</label>
-                                <span className="text-[9px] font-mono text-emerald-400">{settings.size}</span>
-                            </div>
-                            <input type="range" min="2" max="30" value={settings.size}
-                                onChange={(e) => setSettings(prev => ({...prev, size: parseInt(e.target.value)}))}
-                                className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none accent-emerald-500 cursor-pointer" />
-                        </div>
-                        <div className="space-y-1.5">
-                            <div className="flex justify-between">
-                                <label className="text-gray-400 text-[9px] font-bold tracking-wider">TIME DILATION</label>
-                                <span className="text-[9px] font-mono text-emerald-400">{settings.speed.toFixed(1)}x</span>
-                            </div>
-                            <input type="range" min="0.1" max="5.0" step="0.1" value={settings.speed}
-                                onChange={(e) => setSettings(prev => ({...prev, speed: parseFloat(e.target.value)}))}
-                                className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none accent-emerald-500 cursor-pointer" />
-                        </div>
-                    </div>
-
-                    {/* Clear + Science */}
-                    <div className="pt-2 border-t border-white/10 space-y-2">
-                        <button
-                            onClick={() => { s.current.particles = []; setStats(p => ({...p, particles: 0})); }}
-                            className="w-full py-2.5 bg-red-500/10 border border-red-500/30 text-red-300 rounded-xl text-[10px] font-bold hover:bg-red-500/20 hover:text-white transition-all flex items-center justify-center gap-1.5"
-                        >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            CLEAR SWARM
-                        </button>
-                        <button
-                            onClick={() => setShowScience(true)}
-                            className="w-full py-2.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded-xl text-[10px] font-bold hover:bg-emerald-500/20 hover:text-white transition-all flex items-center justify-center gap-1.5"
-                        >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-                            THE SCIENCE
-                        </button>
-                    </div>
-                </div>
-            )}
-        </>
-    );
+    const setMode = (mode) => setSettings((p) => ({ ...p, mode }));
+    const clearSwarm = () => { s.current.particles = []; setStats((p) => ({ ...p, particles: 0 })); };
 
     return (
-        <div className="relative w-full h-[calc(100vh-4rem)] bg-black overflow-hidden select-none">
+        <SimShell
+            slug="nparticle"
+            subtitle="O(N²) gravity · 3D swarm"
+            onScience={() => setShowScience(true)}
+            peek={
+                <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                        <Segmented label="Spawn type" value={settings.mode} onChange={setMode} options={[
+                            { value: "single", label: "Single" },
+                            { value: "circle", label: "Burst" },
+                        ]} />
+                    </div>
+                    <Stats items={[
+                        { label: "Particles", value: stats.particles.toLocaleString() },
+                        { label: "FPS", value: stats.fps, tone: stats.fps && stats.fps < 30 ? "bad" : undefined },
+                    ]} />
+                </div>
+            }
+            panel={
+                <>
+                    <Group label="Particles">
+                        <Slider label="Size and mass" value={settings.size} min={2} max={30} step={1} onChange={(v) => setSettings((p) => ({ ...p, size: v }))} />
+                        <Slider label="Time dilation" value={settings.speed} min={0.1} max={5.0} step={0.1} onChange={(v) => setSettings((p) => ({ ...p, speed: v }))} format={(v) => `${v.toFixed(1)}×`} />
+                    </Group>
+                    <Group label="Camera">
+                        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[13px]">
+                            <dt className="text-ink-3">Spawn</dt><dd className="text-ink-2">Quick tap or click</dd>
+                            <dt className="text-ink-3">Orbit</dt><dd className="text-ink-2">Drag, or left-click drag</dd>
+                            <dt className="text-ink-3">Pan</dt><dd className="text-ink-2">Two-finger drag, or right-click drag</dd>
+                            <dt className="text-ink-3">Zoom</dt><dd className="text-ink-2">Pinch or scroll</dd>
+                        </dl>
+                    </Group>
+                    <ActionButton tone="danger" icon={Icons.clear} onClick={clearSwarm}>Clear swarm</ActionButton>
+                </>
+            }
+        >
+            <CanvasSimulation
+                initSimulation={init}
+                updateSimulation={update}
+                drawSimulation={draw}
+            />
             {showScience && (
                 <ScienceModal
                     title="N-Particle Sandbox — N-Body Simulation"
@@ -716,63 +553,6 @@ export default function NParticleSimulationPage() {
                     ]}
                 />
             )}
-            <CanvasSimulation 
-                initSimulation={init}
-                updateSimulation={update}
-                drawSimulation={draw}
-            />
-
-            {/* Glowing ambient background orb for the dashboard */}
-            <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-900/20 rounded-full blur-[100px] pointer-events-none" />
-
-            {/* --- DESKTOP PANEL TOGGLE BUTTON --- */}
-            <button 
-                onClick={() => setIsDesktopPanelOpen(!isDesktopPanelOpen)}
-                className="hidden md:flex absolute top-6 right-6 z-50 bg-white/5 backdrop-blur-xl border border-white/20 p-3 rounded-full shadow-2xl text-white items-center justify-center transition-opacity duration-300 ui-panel hover:bg-white/10"
-            >
-                <svg className={`w-5 h-5 transition-transform duration-300 ${isDesktopPanelOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
-            </button>
-
-            {/* --- DESKTOP SIDE PANEL --- */}
-            <div className={`ui-panel hidden md:block absolute top-6 right-20 bg-white/5 backdrop-blur-3xl p-4 rounded-2xl border border-white/10 text-sm text-white w-[280px] pointer-events-auto shadow-2xl transition-all duration-300 z-40 ${isDesktopPanelOpen ? 'translate-x-0 opacity-100 visible' : 'translate-x-[120%] opacity-0 invisible pointer-events-none'}`}>
-                {renderPanelContent()}
-            </div>
-
-            {/* --- MOBILE BOTTOM SHEET --- */}
-            <div
-                className={`ui-panel md:hidden fixed bottom-0 left-0 right-0 w-full bg-black/70 backdrop-blur-3xl border-t border-white/15 rounded-t-3xl z-40 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
-                    isMobileExpanded ? 'h-[65vh]' : 'h-[110px]'
-                }`}
-                onTouchStart={(e) => {
-                    swipeRef.current.startY = e.touches[0].clientY;
-                    swipeRef.current.startX = e.touches[0].clientX;
-                }}
-                onTouchEnd={(e) => {
-                    const dy = swipeRef.current.startY - e.changedTouches[0].clientY;
-                    const dx = Math.abs(swipeRef.current.startX - e.changedTouches[0].clientX);
-                    if (Math.abs(dy) > 40 && Math.abs(dy) > dx) {
-                        if (dy > 0) setIsMobileExpanded(true);
-                        else        setIsMobileExpanded(false);
-                    }
-                }}
-            >
-                {/* Drag handle — tap or swipe */}
-                <div
-                    className="w-full flex flex-col items-center pt-2 pb-1 cursor-pointer gap-1"
-                    onClick={() => setIsMobileExpanded(!isMobileExpanded)}
-                >
-                    <div className={`w-10 h-1 rounded-full transition-colors duration-300 ${isMobileExpanded ? 'bg-emerald-400/50' : 'bg-white/30'}`} />
-                    {!isMobileExpanded && (
-                        <span className="text-[9px] text-white/30 tracking-widest uppercase animate-bounce">swipe up</span>
-                    )}
-                </div>
-
-                <div className="px-4 pb-4">
-                    {renderMobilePanelContent()}
-                </div>
-            </div>
-
-            <AdBanner className="absolute bottom-4 left-0 right-0 z-10 pointer-events-none" />
-        </div>
+        </SimShell>
     );
 }
