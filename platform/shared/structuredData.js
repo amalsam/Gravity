@@ -1,4 +1,4 @@
-import { siteConfig, absoluteUrl } from "./config";
+import { siteConfig, absoluteUrl, socialLinks } from "./config";
 import { simulations, getSimulation } from "./simulations";
 
 const ORG_ID = `${siteConfig.url}/#organization`;
@@ -10,6 +10,7 @@ export const organization = () => ({
     name: siteConfig.name,
     url: absoluteUrl("/"),
     logo: `${siteConfig.url}/icon-512.png`,
+    sameAs: socialLinks().map((l) => l.href),
 });
 
 export const website = () => ({

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import BrandMark from "./BrandMark";
 import { simulationsByCategory } from "@/shared/simulations";
-import { siteConfig } from "@/shared/config";
+import { siteConfig, socialLinks } from "@/shared/config";
 
 export default function Footer() {
   return (
@@ -16,6 +16,15 @@ export default function Footer() {
             <p className="mt-3 text-sm leading-relaxed text-ink-3">
               Free physics simulations that run in your browser. Built from the real equations.
             </p>
+            <ul className="mt-4 flex flex-wrap gap-x-4">
+              {socialLinks().map((l) => (
+                <li key={l.label}>
+                  <a href={l.href} target="_blank" rel="noopener" className="inline-flex min-h-9 items-center text-sm text-ink-2 hover:text-ink">
+                    {l.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
           {simulationsByCategory().map((cat) => (
             <div key={cat.id}>

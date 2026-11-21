@@ -1,0 +1,61 @@
+[
+  {
+    "folder": "2026-02-java-gravity-blackhole-galaxy",
+    "code": "https://github.com/amalsam/stacklor-reels/tree/main/2026-02-java-gravity-blackhole-galaxy",
+    "title": "Gravity, black hole and galaxy sims in plain Java",
+    "date": "2026-02",
+    "summary": "Three Swing simulations with no libraries: an N-body gravity sandbox, a black hole that follows your mouse and swallows particles, and a spiral galaxy with thousands of stars in stable orbits.",
+    "language": "java",
+    "tags": [
+      "gravity",
+      "black-hole",
+      "galaxy",
+      "java",
+      "swing"
+    ],
+    "instagram": null,
+    "youtube": null,
+    "labs": [
+      "gravity",
+      "blackhole",
+      "galaxy"
+    ]
+  },
+  {
+    "folder": "2024-03-self-driving-car-neat",
+    "code": "https://github.com/amalsam/stacklor-reels/tree/main/2024-03-self-driving-car-neat",
+    "title": "Self-driving car learns a track with NEAT",
+    "date": "2024-03",
+    "summary": "A population of cars with five radar sensors evolves neural networks with NEAT until they can drive a full lap.",
+    "language": "python",
+    "tags": [
+      "neat",
+      "neural-network",
+      "genetic-algorithm",
+      "pygame"
+    ],
+    "instagram": null,
+    "youtube": null,
+    "labs": []
+  },
+  {
+    "folder": "2024-02-gravity-particles-pygame",
+    "code": "https://github.com/amalsam/stacklor-reels/tree/main/2024-02-gravity-particles-pygame",
+    "title": "Thousands of particles under gravity",
+    "date": "2024-02",
+    "summary": "An N-body particle simulation in pygame, sped up with numba, where you spawn lines and clusters of particles and watch gravity pull them together.",
+    "language": "python",
+    "tags": [
+      "gravity",
+      "n-body",
+      "pygame",
+      "numba"
+    ],
+    "instagram": null,
+    "youtube": null,
+    "labs": [
+      "gravity",
+      "nparticle"
+    ]
+  }
+]
