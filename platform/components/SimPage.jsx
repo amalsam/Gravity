@@ -3,6 +3,7 @@ import Image from "next/image";
 import JsonLd from "./JsonLd";
 import { getSimulation, relatedSimulations, categories } from "@/shared/simulations";
 import { simulationJsonLd } from "@/shared/structuredData";
+import { reelsForSimulation } from "@/shared/reels";
 
 // Server-rendered wrapper for every simulation route: the live simulation
 // first, then a crawlable article (H1, how-to, concepts, FAQ, related) that
@@ -11,6 +12,7 @@ export default function SimPage({ slug, children }) {
   const sim = getSimulation(slug);
   const category = categories.find((c) => c.id === sim.category);
   const related = relatedSimulations(slug, 3);
+  const reels = reelsForSimulation(slug);
 
   return (
     <>
@@ -95,6 +97,35 @@ export default function SimPage({ slug, children }) {
                   ))}
                 </ul>
               </section>
+
+              {reels.length > 0 && (
+                <section aria-labelledby="reels">
+                  <h2 id="reels" className="eyebrow">From the reels</h2>
+                  <ul className="mt-3 space-y-2">
+                    {reels.map((r) => (
+                      <li key={r.folder} className="rounded-2xl border border-line bg-fill p-4">
+                        <p className="text-[15px] font-medium text-ink">{r.title}</p>
+                        <p className="mt-1 text-[13px] text-ink-3">{r.date} · {r.language}</p>
+                        <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[14px]">
+                          {r.instagram && (
+                            <a href={r.instagram} target="_blank" rel="noopener" className="inline-flex min-h-9 items-center text-ink-2 hover:text-ink">
+                              Instagram
+                            </a>
+                          )}
+                          {r.youtube && (
+                            <a href={r.youtube} target="_blank" rel="noopener" className="inline-flex min-h-9 items-center text-ink-2 hover:text-ink">
+                              YouTube
+                            </a>
+                          )}
+                          <a href={r.code} target="_blank" rel="noopener" className="inline-flex min-h-9 items-center text-ink-2 hover:text-ink">
+                            Get the code
+                          </a>
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
 
               <section aria-labelledby="related">
                 <h2 id="related" className="eyebrow">Try next</h2>

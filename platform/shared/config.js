@@ -13,7 +13,21 @@ export const siteConfig = {
     // While null, ad slots render nothing (no empty boxes).
     adsClientId: null,
     googleAnalyticsId: "G-EQ943WFK5R",
+    // Where the reels and their source code live. A null link is hidden.
+    social: {
+        reelsRepo: "https://github.com/amalsam/stacklor-reels",
+        instagram: null, // e.g. "https://www.instagram.com/<handle>/"
+        youtube: null,   // e.g. "https://www.youtube.com/@<handle>"
+    },
 };
+
+// Links to show in the footer and in the Organization's sameAs, skipping unset ones.
+export const socialLinks = () =>
+    [
+        { label: "Instagram", href: siteConfig.social.instagram },
+        { label: "YouTube", href: siteConfig.social.youtube },
+        { label: "Reel source code", href: siteConfig.social.reelsRepo },
+    ].filter((l) => l.href);
 
 // Canonical URL for a route. The site is exported with trailingSlash: true,
 // so every page lives at /slug/ — canonicals must match that exactly.
